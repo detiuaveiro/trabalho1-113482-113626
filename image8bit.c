@@ -584,10 +584,15 @@ void ImageBlend(Image img1, int x, int y, Image img2, double alpha) { ///
   assert (img2 != NULL);
   assert (ImageValidRect(img1, x, y, img2->width, img2->height));
   // Insert your code here!
-  if (img1 == NULL || img2 == NULL) {
+  if (img1 == NULL || img2 == NULL || img1->width <= 0 || img1->height <= 0 || img2->width <= 0 || img2->height <= 0) {
     errno = EINVAL;
   }
   
+  for (int i = 0; i < img2->height; i++){
+    for (int j =0; j < img2->width; j++){
+      ImageSetPixel(img1, x + j, y + i, (uint8)(ImageGetPixel(img1, x + j, y + i) * (1 - alpha) + ImageGetPixel(img2, j, i) * alpha));
+    }
+  }
 }
 
 /// Compare an image to a subimage of a larger image.
@@ -598,6 +603,17 @@ int ImageMatchSubImage(Image img1, int x, int y, Image img2) { ///
   assert (img2 != NULL);
   assert (ImageValidPos(img1, x, y));
   // Insert your code here!
+  if (img1 == NULL || img2 == NULL || img1->width <= 0 || img1->height <= 0 || img2->width <= 0 || img2->height <= 0) {
+    errno = EINVAL;
+  }
+  for (int i=0; i<img2->height; i++){
+    for (int j=0; j<img2->width; j++){
+      if (ImageGetPixel(img1, x+j, y+i) != ImageGetPixel(img2, j, i)){
+        return 0; //se a condiçao for verificada o loop é interrompido e retorna 0
+      }
+    }
+  }
+  return 1; //se a condiçao nao for verificada retorna 1
 }
 
 /// Locate a subimage inside another image.
@@ -608,6 +624,20 @@ int ImageLocateSubImage(Image img1, int* px, int* py, Image img2) { ///
   assert (img1 != NULL);
   assert (img2 != NULL);
   // Insert your code here!
+  if ( img1 == NULL || img2 == NULL){
+    errno = EINVAL;
+    return 0;
+  }
+  for (int i=0; i<img1->height; i++){
+    for (int j=0; j<img1->width; j++){
+      if (ImageMatchSubImage(img1, j, i, img2) == 1){
+        *px = j;
+        *py = i;
+        return 1;
+      }
+    }
+  }
+  return 0;
 }
 
 
@@ -619,4 +649,25 @@ int ImageLocateSubImage(Image img1, int* px, int* py, Image img2) { ///
 /// The image is changed in-place.
 void ImageBlur(Image img, int dx, int dy) { ///
   // Insert your code here!
+  if (img == NULL || dx < 0 || dy < 0) {
+    errno = EINVAL;
+  }
+  int w = img->width;
+  int h = img->height;
+  for (int y=0; y<h; y++){
+    for (int x=0; x<w; x++){
+      int sum = 0;
+      int counter = 0;
+
+      for (int i=y-dy; i<=y+dy; i++){
+        for (int j=x-dx; j<=x+dx; j++){
+          if (ImageValidPos(img, j, i) == 1){
+            sum += ImageGetPixel(img, j, i);
+            counter++;
+          }
+        }
+      }
+      ImageSetPixel(img, x, y, (uint8)(sum/counter));
+    }
+  }
 }
