@@ -216,7 +216,6 @@ int main(int ac, char* av[]) {
     }
     k++;
   }
-  
   // Destroy remaining images
   while (n > 0) {
     ImageDestroy(&img[--n]);
