@@ -430,11 +430,11 @@ void ImageBrighten(Image img, double factor) { ///
   // Insert your code here!
   size_t area=img->width*img->height;
   for (int i = 0; i < area; i++) {
-    if (img->pixel[i] * factor > img->maxval) {
+    if (img->pixel[i] * factor + 0.5 > img->maxval) {
       img->pixel[i] = img->maxval;
     }
     else {
-      img->pixel[i] = img->pixel[i] * factor;
+      img->pixel[i] = img->pixel[i] * factor + 0.5;
     }
   }
 }
@@ -472,11 +472,11 @@ Image ImageRotate(Image img) { ///
     return NULL;
   }
 
-  Image rotatedImg = ImageCreate(img->height, img->width, img->maxval); // width and height are swapped
+  Image rotatedImg = ImageCreate(img->height, img->width, img->maxval); // Swap width and height
   for (int i = 0; i < img->height; i++) {
-    for (int j = 0; j < img->width; j++) {
-      ImageSetPixel(rotatedImg, i, j, ImageGetPixel(img, j, i));
-    }
+      for (int j = 0; j < img->width; j++) {
+          ImageSetPixel(rotatedImg, i, img->width - j - 1, ImageGetPixel(img, j, i)); // Adjust coordinates
+      }
   }
 
   return rotatedImg;
@@ -588,9 +588,9 @@ void ImageBlend(Image img1, int x, int y, Image img2, double alpha) { ///
     errno = EINVAL;
   }
   
-  for (int i = 0; i < img2->height; i++){
-    for (int j =0; j < img2->width; j++){
-      ImageSetPixel(img1, x + j, y + i, (uint8)(ImageGetPixel(img1, x + j, y + i) * (1 - alpha) + ImageGetPixel(img2, j, i) * alpha));
+  for (int i = 0; i < img2->width; i++){
+    for (int j =0; j < img2->height; j++){
+      ImageSetPixel(img1, x + i, y + j, (uint8)(ImageGetPixel(img1, x + i, y + j) * (1 - alpha)+0.5 + ImageGetPixel(img2, i, j) * alpha));
     }
   }
 }
@@ -649,25 +649,29 @@ int ImageLocateSubImage(Image img1, int* px, int* py, Image img2) { ///
 /// The image is changed in-place.
 void ImageBlur(Image img, int dx, int dy) { ///
   // Insert your code here!
+  int sum = 0;
+  int counter = 0;
+  Image blured = ImageCreate(img->width+1,img->height+1,img->maxval);
+  ImagePaste(blured,0,0,img);
   if (img == NULL || dx < 0 || dy < 0) {
     errno = EINVAL;
   }
   int w = img->width;
   int h = img->height;
-  for (int y=0; y<h; y++){
-    for (int x=0; x<w; x++){
-      int sum = 0;
-      int counter = 0;
+  for (int x=0; x<w; x++){
+    for (int y=0; y<h; y++){
+      sum=0;
+      counter=0;
 
-      for (int i=y-dy; i<=y+dy; i++){
-        for (int j=x-dx; j<=x+dx; j++){
-          if (ImageValidPos(img, j, i) == 1){
-            sum += ImageGetPixel(img, j, i);
+      for (int i=x-dx; i<=x+dx; i++){
+        for (int j=y-dy; j<=y+dy; j++){
+          if (ImageValidPos(img, i, j)){
+            sum += ImageGetPixel(blured, i, j);
             counter++;
           }
         }
       }
-      ImageSetPixel(img, x, y, (uint8)(sum/counter));
+      ImageSetPixel(img, x, y, (uint8)((sum+counter/2)/counter));
     }
   }
 }
