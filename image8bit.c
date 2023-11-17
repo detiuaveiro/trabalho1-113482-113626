@@ -18,6 +18,9 @@
 // Date: 16/11/2023
 //
 
+#define MAX(X,Y) (((X)>(Y)) ? (X) : (Y))
+#define MIN(X,Y) (((X)<(Y)) ? (X) : (Y))
+
 #include "image8bit.h"
 
 #include <assert.h>
@@ -325,6 +328,7 @@ void ImageStats(Image img, uint8* min, uint8* max) { ///
   *max = 0;
   size_t area=img->width*img->height;
   for (int i = 0; i < area; i++) {
+    PIXMEM += 2;  // count two pixel accesses (read)
     if (img->pixel[i] < *min) {
       *min = img->pixel[i];
     }
@@ -358,9 +362,7 @@ int ImageValidRect(Image img, int x, int y, int w, int h) { ///
 // This internal function is used in ImageGetPixel / ImageSetPixel. 
 // The returned index must satisfy (0 <= index < img->width*img->height)
 static inline int G(Image img, int x, int y) {
-  int index;
-  // Insert your code here!
-  index = y*img->width + x;
+  int index = y*img->width + x;
   assert (0 <= index && index < img->width*img->height);
   return index;
 }
@@ -398,6 +400,7 @@ void ImageNegative(Image img) { ///
   // Insert your code here!
   size_t area=img->width*img->height;
   for (int i = 0; i < area; i++) {
+    PIXMEM += 1;  // count one pixel access (read+write)
     img->pixel[i] = PixMax - img->pixel[i];
   }
 }
@@ -410,6 +413,7 @@ void ImageThreshold(Image img, uint8 thr) { ///
   // Insert your code here!
   size_t area=img->width*img->height;
   for (int i = 0; i < area; i++) {
+    PIXMEM += 1;  // count one pixel access (read+write)
     if (img->pixel[i] < thr) {
       img->pixel[i] = 0;
     }
@@ -425,10 +429,10 @@ void ImageThreshold(Image img, uint8 thr) { ///
 /// darken the image if factor<1.0.
 void ImageBrighten(Image img, double factor) { ///
   assert (img != NULL);
-  assert (factor >= 0.0);
   // Insert your code here!
   size_t area=img->width*img->height;
   for (int i = 0; i < area; i++) {
+    PIXMEM += 1;  // count one pixel access (read+write)
     if (img->pixel[i] * factor + 0.5 > img->maxval) {
       img->pixel[i] = img->maxval;
     }
@@ -565,6 +569,7 @@ int ImageMatchSubImage(Image img1, int x, int y, Image img2) { ///
   // Insert your code here!
   for (int i=0; i<img2->height; i++){
     for (int j=0; j<img2->width; j++){
+      COMPARACOES++;
       if (ImageGetPixel(img1, x+j, y+i) != ImageGetPixel(img2, j, i)){
         return 0; //se a condiçao for verificada o loop é interrompido e retorna 0
       }
@@ -583,6 +588,7 @@ int ImageLocateSubImage(Image img1, int* px, int* py, Image img2) { ///
   // Insert your code here!
   for (int i=0; i<img1->height - img2->height + 1; i++){
     for (int j=0; j<img1->width - img2->width + 1; j++){
+      COMPARACOES++;
       if (ImageMatchSubImage(img1, j, i, img2)){
         *px = j;
         *py = i;
@@ -600,7 +606,7 @@ int ImageLocateSubImage(Image img1, int* px, int* py, Image img2) { ///
 /// Each pixel is substituted by the mean of the pixels in the rectangle
 /// [x-dx, x+dx]x[y-dy, y+dy].
 /// The image is changed in-place.
-void ImageBlur(Image img, int dx, int dy) { ///
+void ImageBlur2(Image img, int dx, int dy) { ///
   // Insert your code here!
   assert(img!=NULL);
   int sum = 0;
@@ -624,6 +630,49 @@ void ImageBlur(Image img, int dx, int dy) { ///
         }
       }
       ImageSetPixel(img, x, y, (uint8)((sum+counter/2)/counter));
+    }
+  }
+}
+
+void ImageBlur(Image img, int dx, int dy){
+  assert(img!=NULL);
+  int *sumtable;
+  int blur, initial_x, initial_y, x_end, y_end, x_length, y_length, total;
+  sumtable = (int*) malloc(sizeof(uint8*)*img->width *img->height);
+  for (int x=0; x< img->width; x++){
+    for (int y=0; y<img->height; y++){
+      sumtable[G(img,x,y)]=ImageGetPixel(img, x, y);
+      if (x> 0 && y>0){
+        sumtable[G(img,x,y)]-=sumtable[G(img,x-1,y-1)];
+      }
+      if (x > 0){
+        sumtable[G(img,x,y)]+=sumtable[G(img,x-1,y)];
+      }
+      if (y > 0){
+        sumtable[G(img,x,y)]+=sumtable[G(img,x,y-1)];
+      }
+    }
+  }
+  for (int x=0; x< img->width; x++){
+    for (int y=0; y<img->height; y++){
+      initial_x=MAX(x-dx,0);
+      initial_y=MAX(y-dy,0);
+      x_end=MIN(x+dx, img->width-1);
+      y_end=MIN(y+dy, img->height-1);
+      x_length=x_end-initial_x+1;
+      y_length=y_end-initial_y+1;
+      total=x_length*y_length;
+      blur=sumtable[G(img, x_end, y_end)];
+      if (initial_x > 0 && initial_y > 0){
+        blur+=sumtable[G(img,initial_x-1,initial_y-1)];
+      }
+      if (initial_x > 0){
+        blur-=sumtable[G(img,initial_x-1,y_end)];
+      }
+      if (initial_y > 0){
+        blur-=sumtable[G(img,x_end,initial_y-1)];
+      }
+      ImageSetPixel(img, x, y, (blur + total/2)/total);
     }
   }
 }
