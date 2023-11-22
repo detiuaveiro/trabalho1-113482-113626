@@ -39,8 +39,9 @@ int main(int argc, char* argv[]) {
   // the appropriate lines.
   InstrReset();
   printf("# Locate image\n");
-  Image img2 = ImageCrop(img1, 0, 0, 1, 1);
+  Image img2 = ImageCrop(img1, 100, 100, 200, 200);
   int px,py;
+  InstrReset();
   ImageLocateSubImage(img1, &px ,&py ,img2);
   // to print instrumentation
   if (img2 == NULL) {
@@ -50,7 +51,7 @@ int main(int argc, char* argv[]) {
 
   InstrReset();
   printf("# Blur image\n");
-  int dx=10,dy=10;
+  int dx=0,dy=0;
   ImageBlur(img2, dx, dy);
   InstrPrint();
 

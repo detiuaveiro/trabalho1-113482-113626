@@ -364,22 +364,21 @@ int ImageValidRect(Image img, int x, int y, int w, int h) { ///
 static inline int G(Image img, int x, int y) {
   int index = y*img->width + x;
   assert (0 <= index && index < img->width*img->height);
+  PIXMEM += 1;
   return index;
 }
 
 /// Get the pixel (level) at position (x,y).
 uint8 ImageGetPixel(Image img, int x, int y) { ///
   assert (img != NULL);
-  assert (ImageValidPos(img, x, y));
-  PIXMEM += 1;  // count one pixel access (read)
+  assert (ImageValidPos(img, x, y));  // count one pixel access (read)
   return img->pixel[G(img, x, y)];
 } 
 
 /// Set the pixel at position (x,y) to new level.
 void ImageSetPixel(Image img, int x, int y, uint8 level) { ///
   assert (img != NULL);
-  assert (ImageValidPos(img, x, y));
-  PIXMEM += 1;  // count one pixel access (store)
+  assert (ImageValidPos(img, x, y));  // count one pixel access (store)
   img->pixel[G(img, x, y)] = level;
 } 
 
