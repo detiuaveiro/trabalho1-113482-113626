@@ -38,13 +38,21 @@ int main(int argc, char* argv[]) {
   // Try changing the behaviour of the program by commenting/uncommenting
   // the appropriate lines.
   InstrReset();
-  Image img2 = ImageCrop(img1, ImageWidth(img1)/4, ImageHeight(img1)/4, ImageWidth(img1)/2, ImageHeight(img1)/2);
+  printf("# Locate image\n");
+  Image img2 = ImageCrop(img1, 0, 0, 1, 1);
   int px,py;
   ImageLocateSubImage(img1, &px ,&py ,img2);
   // to print instrumentation
   if (img2 == NULL) {
     error(2, errno, "Rotating img2: %s", ImageErrMsg());
   }
+  InstrPrint();
+
+  InstrReset();
+  printf("# Blur image\n");
+  int dx=10,dy=10;
+  ImageBlur(img2, dx, dy);
+  InstrPrint();
 
   //ImageNegative(img2);
   //ImageThreshold(img2, 100);
