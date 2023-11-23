@@ -156,7 +156,7 @@ void ImageInit(void) { ///
 
 // Macros to simplify accessing instrumentation counters:
 #define PIXMEM InstrCount[0]
-#define COMPARACOES InstrCount[1]
+#define COMPARACOES InstrCount[1] //macro para analise de complexidade ImageLocateSubImage
 // Add more macros here...
 
 // TIP: Search for PIXMEM or InstrCount to see where it is incremented!
@@ -172,34 +172,34 @@ void ImageInit(void) { ///
 /// On success, a new image is returned.
 /// (The caller is responsible for destroying the returned image!)
 /// On failure, returns NULL and errno/errCause are set accordingly.
-Image ImageCreate(int width, int height, uint8 maxval) { ///
+Image ImageCreate(int width, int height, uint8 maxval) { 
   assert (width >= 0);
   assert (height >= 0);
   assert (0 < maxval && maxval <= PixMax);
-  // Insert your code here!
-  Image img = malloc(sizeof(struct image));
+  
+  Image img = malloc(sizeof(struct image)); //aloca memoria para a estrutura
 
-  if (check(img != NULL, "Failed to allocate memory for image")){
+  if (check(img != NULL, "Failed to allocate memory for image")){ //verifica se a memoria foi alocada
+    img->width = width; //atribui os valores aos campos da estrutura
+    img->height = height;
+    img->maxval = maxval;
+    img->pixel = malloc(sizeof(uint8)*height*width); //aloca memoria para o array de pixeis
 
-  img->width = width;
-  img->height = height;
-  img->maxval = maxval;
-  img->pixel = malloc(sizeof(uint8)*height*width);
-
-    if (check(img->pixel != NULL, "Failed to allocate memory for image pixels")){
+    if (check(img->pixel != NULL, "Failed to allocate memory for image pixels")){ //verifica se a memoria foi alocada
       return img;
     }
     else {
-      free(img->pixel);
-      free(img);
+      free(img->pixel); //liberta a memoria alocada para o array de pixeis
+      free(img); 
       return NULL;
     }
   }
   else{
-    free(img);
+    free(img); //liberta a memoria alocada para a estrutura
     return NULL;
   }
 }
+
 int *sumtable1;
 int *sumtable2;
 
@@ -245,15 +245,14 @@ void freeSumTables() {
 }
 
 /// Destroy the image pointed to by (*imgp).
-///   imgp : address of an Image variable.
+///   imgp : address of an Image variablestatic inline int G(Image img, int x, int y);.
 /// If (*imgp)==NULL, no operation is performed.
 /// Ensures: (*imgp)==NULL.
 /// Should never fail, and should preserve global errno/errCause.
 void ImageDestroy(Image* imgp) { ///
   assert (imgp != NULL);
-  // Insert your code here!
-  free((*imgp)->pixel);
-  free(*imgp);
+  free((*imgp)->pixel); //liberta a memoria alocada para o array de pixeis
+  free(*imgp); //liberta a memoria alocada para a estrutura
   *imgp = NULL;  
 }
 
@@ -342,19 +341,19 @@ int ImageSave(Image img, const char* filename) { ///
 /// These functions do not modify the image and never fail.
 
 /// Get image width
-int ImageWidth(Image img) { ///
+int ImageWidth(Image img) { ///retorna a largura da imagem
   assert (img != NULL);
-  return img->width;
+  return img->width; 
 }
 
 /// Get image height
-int ImageHeight(Image img) { ///
+int ImageHeight(Image img) { ///retorna a altura da imagem
   assert (img != NULL);
   return img->height;
 }
 
 /// Get image maximum gray level
-int ImageMaxval(Image img) { ///
+int ImageMaxval(Image img) { ///retorna o valor maximo da intensidade de cinzento da imagem
   assert (img != NULL);
   return img->maxval;
 }
@@ -364,18 +363,17 @@ int ImageMaxval(Image img) { ///
 /// On return,
 /// *min is set to the minimum gray level in the image,
 /// *max is set to the maximum.
-void ImageStats(Image img, uint8* min, uint8* max) { ///
+void ImageStats(Image img, uint8* min, uint8* max) { 
   assert (img != NULL);
-  // Insert your code here!
-  *min = PixMax;
-  *max = 0;
-  size_t area=img->width*img->height;
+  *min = PixMax; //atribui o valor maximo possivel a min
+  *max = 0; //atribui o valor minimo possivel a max
+  size_t area=img->width*img->height; //calcula a area da imagem, numero total de pixeis
   for (int i = 0; i < area; i++) {
-    PIXMEM += 2;  // count two pixel accesses (read)
-    if (img->pixel[i] < *min) {
+    PIXMEM += 2;  // conta 2 acessos à memória
+    if (img->pixel[i] < *min) {  //se o valor do pixel for menor que o valor minimo atual, o valor minimo atual passa a ser o valor do pixel
       *min = img->pixel[i];
-    }
-    if (img->pixel[i] > *max) {
+    }                             
+    if (img->pixel[i] > *max) {  //se o valor do pixel for maior que o valor maximo atual, o valor maximo atual passa a ser o valor do pixel
       *max = img->pixel[i];
     }
   }
@@ -390,8 +388,7 @@ int ImageValidPos(Image img, int x, int y) { ///
 /// Check if rectangular area (x,y,w,h) is completely inside img.
 int ImageValidRect(Image img, int x, int y, int w, int h) { ///
   assert (img != NULL);
-  // Insert your code here!
-  return (0 <= x && x+w <= img->width) && (0 <= y &&y+h <= img->height); //Pode ter problema aqui
+  return (0 <= x && x+w <= img->width) && (0 <= y &&y+h <= img->height); 
 }
 
 /// Pixel get & set operations
@@ -405,23 +402,24 @@ int ImageValidRect(Image img, int x, int y, int w, int h) { ///
 // This internal function is used in ImageGetPixel / ImageSetPixel. 
 // The returned index must satisfy (0 <= index < img->width*img->height)
 static inline int G(Image img, int x, int y) {
-  int index = y*img->width + x;
+  int index = y*img->width + x;  //expressão para converter coordenadas (x,y) em indice linear
   assert (0 <= index && index < img->width*img->height);
-  PIXMEM += 1;
   return index;
 }
 
 /// Get the pixel (level) at position (x,y).
-uint8 ImageGetPixel(Image img, int x, int y) { ///
+uint8 ImageGetPixel(Image img, int x, int y) { ///retorna o valor de intensidade cinzento de um pixel
   assert (img != NULL);
-  assert (ImageValidPos(img, x, y));  // count one pixel access (read)
+  assert (ImageValidPos(img, x, y));  
+  PIXMEM += 1; // count one pixel access (read)
   return img->pixel[G(img, x, y)];
 } 
 
 /// Set the pixel at position (x,y) to new level.
-void ImageSetPixel(Image img, int x, int y, uint8 level) { ///
+void ImageSetPixel(Image img, int x, int y, uint8 level) { ///Atribui um valor de intensidade cinzento a um pixel
   assert (img != NULL);
-  assert (ImageValidPos(img, x, y));  // count one pixel access (store)
+  assert (ImageValidPos(img, x, y));  
+  PIXMEM += 1; // count one pixel access (store)
   img->pixel[G(img, x, y)] = level;
 } 
 
@@ -439,11 +437,10 @@ void ImageSetPixel(Image img, int x, int y, uint8 level) { ///
 /// resulting in a "photographic negative" effect.
 void ImageNegative(Image img) { ///
   assert (img != NULL);
-  // Insert your code here!
-  size_t area=img->width*img->height;
+  size_t area=img->width*img->height; //area da imagem, numero total de pixeis
   for (int i = 0; i < area; i++) {
-    PIXMEM += 1;  // count one pixel access (read+write)
-    img->pixel[i] = PixMax - img->pixel[i];
+    PIXMEM += 2;  // conta o acesso a pixeis
+    img->pixel[i] = PixMax - img->pixel[i]; //inverte o valor de intensidade cinzento de cada pixel
   }
 }
 
@@ -452,15 +449,16 @@ void ImageNegative(Image img) { ///
 /// all pixels with level>=thr to white (maxval).
 void ImageThreshold(Image img, uint8 thr) { ///
   assert (img != NULL);
-  // Insert your code here!
-  size_t area=img->width*img->height;
+  size_t area=img->width*img->height; //area da imagem, numero total de pixeis
   for (int i = 0; i < area; i++) {
-    PIXMEM += 1;  // count one pixel access (read+write)
-    if (img->pixel[i] < thr) {
-      img->pixel[i] = 0;
+    PIXMEM ++;  // conta acesso a um pixel
+    if (img->pixel[i] < thr) { //condições para o caso do valor de intensidade exceder os limites
+      PIXMEM ++; 
+      img->pixel[i] = 0; //se o valor de intensidade for menor que o threshold, o pixel fica preto
     }
     else {
-      img->pixel[i] = img->maxval;
+      PIXMEM ++; 
+      img->pixel[i] = img->maxval; //se o valor de intensidade for maior ou igual ao threshold, o pixel fica branco
     }
   }
 }
@@ -471,16 +469,17 @@ void ImageThreshold(Image img, uint8 thr) { ///
 /// darken the image if factor<1.0.
 void ImageBrighten(Image img, double factor) { ///
   assert (img != NULL);
-  // Insert your code here!
-  size_t area=img->width*img->height;
+  size_t area=img->width*img->height; //area da imagem, numero total de pixeis
   for (int i = 0; i < area; i++) {
-    PIXMEM += 1;  // count one pixel access (read+write)
+    PIXMEM++;  // conta acesso a um pixel
     if (img->pixel[i] * factor + 0.5 > img->maxval) {
-      img->pixel[i] = img->maxval;
-    }
+      PIXMEM++;
+      img->pixel[i] = img->maxval; //se o resultado da operação ultrapassar o valor da intensidade limite, 
+    }                              //o valor de intensidade do pixel fica igual ao valor da intensidade limite
     else {
-      img->pixel[i] = img->pixel[i] * factor + 0.5; 
-    }
+      PIXMEM+=2;
+      img->pixel[i] = img->pixel[i] * factor + 0.5; //multiplica o valor de intensidade cinzento de cada pixel pelo factor
+    }                                               //e arredonda o resultado para o inteiro mais proximo
   }
 }
 
@@ -508,15 +507,13 @@ void ImageBrighten(Image img, double factor) { ///
 Image ImageRotate(Image img) { ///
   assert (img != NULL);
   // Insert your code here!
-  Image rotatedImg = ImageCreate(img->height, img->width, img->maxval); // width and height are swapped
-  for (int i = 0; i < img->height; i++) {
+  Image rotatedImg = ImageCreate(img->height, img->width, img->maxval); // cria uma nova imagem, com os valores de largura e altura trocados
+  for (int i = 0; i < img->height; i++) {                               // isto é necessário para imagens não quadradas
     for (int j = 0; j < img->width; j++) {
-      ImageSetPixel(rotatedImg, i, img->width - j -1, ImageGetPixel(img, j, i));
-    }
+      ImageSetPixel(rotatedImg, i, img->width - j -1, ImageGetPixel(img, j, i)); 
+    } //aplica-se a rotação de 90º anti-horario a cada pixel da imagem
   }
-
-  return rotatedImg;
-
+  return rotatedImg; //retorna a imagem
 }
 
 /// Mirror an image = flip left-right.
@@ -529,14 +526,14 @@ Image ImageRotate(Image img) { ///
 Image ImageMirror(Image img) { ///
   assert (img != NULL);
   // Insert your code here!
-  Image mirroredImg = ImageCreate(img->width, img->height, img->maxval);
+  Image mirroredImg = ImageCreate(img->width, img->height, img->maxval); //cria uma nova imagem com as mesmas dimensões da anterior
   for (int i = 0; i < img->height; i++) {
     for (int j = 0; j < img->width; j++) {
-      ImageSetPixel(mirroredImg, j, i, ImageGetPixel(img, img->width - j - 1, i));
+      ImageSetPixel(mirroredImg, j, i, ImageGetPixel(img, img->width - j - 1, i)); //para todos os pixeis, inverte as cordenadas do eixo do x
+                                                                                   //x=width-x-1
     }
   }
-
-  return mirroredImg;
+  return mirroredImg; //retorna a nova imagem, com as alterações efetuadas
 }
 
 /// Crop a rectangular subimage from img.
@@ -553,16 +550,16 @@ Image ImageMirror(Image img) { ///
 /// On failure, returns NULL and errno/errCause are set accordingly.
 Image ImageCrop(Image img, int x, int y, int w, int h) {
   assert(img != NULL);
-  assert(ImageValidRect(img, x, y, w, h));
-  // Insert your code here!
-  Image croppedImg = ImageCreate(w, h, img->maxval);
+  assert(ImageValidRect(img, x, y, w, h)); //verifica se as dimensões a serem cortadas pertencem completamente à àrea da imagem
+
+  Image croppedImg = ImageCreate(w, h, img->maxval); //cria uma nova imagem com as novas dimensões de largura e altura
   for (int i = 0; i < h; i++) {
     for (int j = 0; j < w; j++) {
-      ImageSetPixel(croppedImg, j, i, ImageGetPixel(img, x + j, y + i));
+      ImageSetPixel(croppedImg, j, i, ImageGetPixel(img, x + j, y + i)); //atribui o valor de cinzento dos pixeis correspondentes à nova imagem
     }
   }
 
-  return croppedImg;
+  return croppedImg; //retorna a nova imagem
 }
 
 /// Operations on two images
@@ -575,10 +572,10 @@ void ImagePaste(Image img1, int x, int y, Image img2) { ///
   assert (img1 != NULL);
   assert (img2 != NULL);
   assert (ImageValidRect(img1, x, y, img2->width, img2->height));
-  // Insert your code here!
+
   for (int i = 0; i < img2->height; i++) {
     for (int j = 0; j < img2->width; j++) {
-      ImageSetPixel(img1, x + j, y + i, ImageGetPixel(img2, j, i));
+      ImageSetPixel(img1, x + j, y + i, ImageGetPixel(img2, j, i)); //atribui o valor de cinzento dos pixeis correspondentes à nova imagem
     }
   }
 }
@@ -593,11 +590,11 @@ void ImageBlend(Image img1, int x, int y, Image img2, double alpha) { ///
   assert (img1 != NULL);
   assert (img2 != NULL);
   assert (ImageValidRect(img1, x, y, img2->width, img2->height));
-  // Insert your code here!
+
   for (int i = 0; i < img2->width; i++){
     for (int j =0; j < img2->height; j++){
-      ImageSetPixel(img1, x + i, y + j, (uint8)(ImageGetPixel(img1, x + i, y + j) * (1 - alpha) + 0.5 + ImageGetPixel(img2, i, j) * alpha)) ;
-    }
+      ImageSetPixel(img1, x + i, y + j, (uint8)(ImageGetPixel(img1, x + i, y + j) * (1 - alpha) + 0.5 + ImageGetPixel(img2, i, j) * alpha)); 
+    } 
   }
 }
 
@@ -607,16 +604,16 @@ void ImageBlend(Image img1, int x, int y, Image img2, double alpha) { ///
 int ImageMatchSubImage(Image img1, int x, int y, Image img2) { ///
   assert (img1 != NULL);
   assert (img2 != NULL);
-  // Insert your code here!
+
   for (int i= 0; i<img2->height; i++){
     for (int j=0; j<img2->width; j++){
       COMPARACOES++;
-      if (ImageGetPixel(img1, x+j, y+i) != ImageGetPixel(img2, j, i)){
+      if (ImageGetPixel(img1, x+j, y+i) != ImageGetPixel(img2, j, i)){ //verifica se os pixeis das duas imagens são diferentes
         return 0; //se a condiçao for verificada o loop é interrompido e retorna 0
       }
     }
   }
-  return 1; //se a condiçao nao for verificada retorna 1
+  return 1; //se a condiçao nao for verificada, conclui-se que existe "match" entre as imagens e retorna 1
 }
 
 /// Locate a subimage inside another image.
@@ -666,73 +663,73 @@ int ImageLocateSubImage(Image img1, int* px, int* py, Image img2) { ///
 /// Each pixel is substituted by the mean of the pixels in the rectangle
 /// [x-dx, x+dx]x[y-dy, y+dy].
 /// The image is changed in-place.
-void ImageBlur2(Image img, int dx, int dy) { ///
-  // Insert your code here!
+void ImageBlur2(Image img, int dx, int dy) { ///Esta função itera por todos os pixeis da imagem e aplica o filtro de blur
   assert(img!=NULL);
-  int sum = 0;
-  int counter = 0;
-  Image blured = ImageCreate(img->width+1,img->height+1,img->maxval);
-  ImagePaste(blured,0,0,img);
+  int sum = 0; //variavel para guardar a soma dos pixeis
+  int counter = 0; //variavel para guardar o numero de pixeis
+  Image blured = ImageCreate(img->width,img->height,img->maxval); //cria uma nova imagem com as dimensões da imagem original
+  ImagePaste(blured,0,0,img); //copia a imagem original para a nova imagem
 
-  int w = img->width;
-  int h = img->height;
+  int w = img->width; //variavel para guardar a largura da imagem
+  int h = img->height; //variavel para guardar a altura da imagem
   for (int x=0; x<w; x++){
-    for (int y=0; y<h; y++){
-      sum=0;
-      counter=0;
+    for (int y=0; y<h; y++){ //itera por todos os pixeis da imagem
+      sum=0; //reinicia a soma e o contador
+      counter=0; 
 
-      for (int i=x-dx; i<=x+dx; i++){
-        for (int j=y-dy; j<=y+dy; j++){
-          if (ImageValidPos(img, i, j)){
-            sum += ImageGetPixel(blured, i, j);
-            counter++;
+      for (int i=x-dx; i<=x+dx; i++){ //fazer a caixa onde o nivel de cinzento do blur vai ser calculado
+        for (int j=y-dy; j<=y+dy; j++){ //com as dimensões (2dx+1)x(2dy+1)
+          if (ImageValidPos(img, i, j)){ //verifica se as coordenadas pertencem à imagem
+            sum += ImageGetPixel(blured, i, j); //soma os pixeis
+            counter++; //incrementa o contador
           }
         }
       }
-      ImageSetPixel(img, x, y, (uint8)((sum+counter/2)/counter));
+      ImageSetPixel(img, x, y, (uint8)((sum+counter/2)/counter)); //atribui o valor de cinzento ao pixel, calculado através da expressão do blur
     }
   }
 }
 
-void ImageBlur(Image img, int dx, int dy){
+void ImageBlur(Image img, int dx, int dy){ //Versão otimizada da função ImageBlur, através da tabela das somas
   assert(img!=NULL);
-  int *sumtable;
-  int blur, initial_x, initial_y, x_end, y_end, x_length, y_length, total;
-  sumtable = (int*) malloc(sizeof(uint8*)*img->width *img->height);
-  for (int x=0; x< img->width; x++){
-    for (int y=0; y<img->height; y++){
-      sumtable[G(img,x,y)]=ImageGetPixel(img, x, y);
-      if (x> 0 && y>0){
-        sumtable[G(img,x,y)]-=sumtable[G(img,x-1,y-1)];
+  int *sumtable; //declaração da tabela de somas
+  int blur, initial_x, initial_y, x_end, y_end, x_length, y_length, total; //declaração de variaveis auxiliares
+  sumtable = (int*) malloc(sizeof(uint8*)*img->width *img->height); //aloca memoria para a tabela de somas, que é igual ao numero de pixeis da imagem
+  for (int x=0; x< img->width; x++){ //itera-se por todos os pixeis da imagem e calcula-se a tabela de somas,
+    for (int y=0; y<img->height; y++){  //dependendo do valor de cinzento de cada pixel
+      sumtable[G(img,x,y)]=ImageGetPixel(img, x, y); //o valor de cada elemento da tabela das somas é igual ao valor de cinzento do pixel (x,y) correspondente
+      if (x>0 && y>0){                               //+ o valor do elemento (x-1,y) + o valor do elemento (x,y-1) - o valor do elemento (x-1,y-1).
+        sumtable[G(img,x,y)]-=sumtable[G(img,x-1,y-1)]; 
       }
       if (x > 0){
         sumtable[G(img,x,y)]+=sumtable[G(img,x-1,y)];
       }
       if (y > 0){
         sumtable[G(img,x,y)]+=sumtable[G(img,x,y-1)];
-      }
+      } //As condições anteriores são necessárias para evitar que sejam somados pixeis que não pertencem à imagem
     }
-  }
+  }//procede-se à aplicação do filtro de blur
   for (int x=0; x< img->width; x++){
     for (int y=0; y<img->height; y++){
-      initial_x=MAX(x-dx,0);
+      initial_x=MAX(x-dx,0); //evitar que as coordenadas da caixa do blur ultrapassem os limites da imagem
       initial_y=MAX(y-dy,0);
-      x_end=MIN(x+dx, img->width-1);
+      x_end=MIN(x+dx, img->width-1); //evitar que as coordenadas da caixa do blur ultrapassem os limites da imagem
       y_end=MIN(y+dy, img->height-1);
-      x_length=x_end-initial_x+1;
+      x_length=x_end-initial_x+1; //calcular o comprimento e a largura da caixa do blur
       y_length=y_end-initial_y+1;
-      total=x_length*y_length;
-      blur=sumtable[G(img, x_end, y_end)];
-      if (initial_x > 0 && initial_y > 0){
-        blur+=sumtable[G(img,initial_x-1,initial_y-1)];
-      }
+      total=x_length*y_length; //numero de elementos da tabela de somas
+      //Devido à dimensão da caixa fazem-se as seguintes operações para calcular o blur
+      blur=sumtable[G(img, x_end, y_end)]; //soma-se o valor do elemento (x,y) da tabela das somas
       if (initial_x > 0){
-        blur-=sumtable[G(img,initial_x-1,y_end)];
+        blur-=sumtable[G(img,initial_x-1,y_end)]; //subtrai-se este elemento, pois este tem a soma do valor de pixeis fora dos limites do blur
       }
       if (initial_y > 0){
-        blur-=sumtable[G(img,x_end,initial_y-1)];
+        blur-=sumtable[G(img,x_end,initial_y-1)]; //subtrai-se este elemento, pois este tem a soma do valor de pixeis fora dos limites do blur
       }
-      ImageSetPixel(img, x, y, (blur + total/2)/total);
+      if (initial_x > 0 && initial_y > 0){ 
+        blur+=sumtable[G(img,initial_x-1,initial_y-1)]; //soma-se este elemento porque o valor dele é subtraido duas vezes nas condições anteriores
+      }
+      ImageSetPixel(img, x, y, (blur + total/2)/total); //atribui o valor de cinzento ao pixel, calculado através da expressão do blur
     }
   }
 }
