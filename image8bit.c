@@ -200,6 +200,7 @@ Image ImageCreate(int width, int height, uint8 maxval) {
   }
 }
 
+// Declaração de ponteiros para as tabelas de soma
 int *sumtable1;
 int *sumtable2;
 int *sumtableQ1;
@@ -208,17 +209,22 @@ int *sumtableQ2;
 static inline int G(Image img, int x, int y);
 
 // Function to calculate sumtables
-void calculateSumTables_Quadrado(Image img1, Image img2) { //calcular
+void calculateSumTables_Quadrado(Image img1, Image img2) {
+   // Verifica se as imagens não são nulas
   assert (img1 != NULL);
   assert (img2 != NULL);
+
+  // Aloca memória para a tabela de soma Q2
   sumtableQ2 = (int*) malloc(sizeof(int) * img2->width * img2->height);
-    // Allocate memory for the sumtable
+  // Aloca memória para a tabela de soma Q1
   sumtableQ1 = (int*) malloc(sizeof(int) * img1->width * img1->height);
+
+  // Preenche a tabela de soma Q2
   for (int x=0; x<img2->width; x++){
     for (int y=0; y<img2->height; y++){
-      sumtableQ2[G(img2,x,y)]=ImageGetPixel(img2, x, y)*ImageGetPixel(img2, x, y);
-      if (x> 0 && y>0){
-        sumtableQ2[G(img2,x,y)]-=sumtableQ2[G(img2,x-1,y-1)];
+      sumtableQ2[G(img2,x,y)]=ImageGetPixel(img2, x, y)*ImageGetPixel(img2, x, y);//o valor de cada elemento da tabela das somas é igual ao valor de cinzento ao quadrado do pixel (x,y) correspondente
+      if (x> 0 && y>0){                                                           //+ o valor do elemento ao quadrado (x-1,y) + o valor do elemento ao quadrado (x,y-1) - o valor do elemento ao quadrado (x-1,y-1).
+        sumtableQ2[G(img2,x,y)]-=sumtableQ2[G(img2,x-1,y-1)];                     //Para mais informações ver vídeo https://youtu.be/4Eh0y3LHTNU?si=1JzPZSPd9p0rDr-U
       }
       if (x > 0){
         sumtableQ2[G(img2,x,y)]+=sumtableQ2[G(img2,x-1,y)];
@@ -226,11 +232,13 @@ void calculateSumTables_Quadrado(Image img1, Image img2) { //calcular
       if (y > 0){
         sumtableQ2[G(img2,x,y)]+=sumtableQ2[G(img2,x,y-1)];
       }
+      //As condições anteriores são necessárias para evitar que sejam somados pixeis que não pertencem à imagem
     }
   }
+  // Preenche a tabela de soma Q1
   for (int x=0; x<img1->width; x++){
     for (int y=0; y<img1->height; y++){
-      sumtableQ1[G(img1,x,y)]=ImageGetPixel(img1, x, y)*ImageGetPixel(img1, x, y);
+      sumtableQ1[G(img1,x,y)]=ImageGetPixel(img1, x, y)*ImageGetPixel(img1, x, y);//igual ao calculo da soma Q2
       if (x> 0 && y>0){
         sumtableQ1[G(img1,x,y)]-=sumtableQ1[G(img1,x-1,y-1)];
       }
@@ -243,6 +251,7 @@ void calculateSumTables_Quadrado(Image img1, Image img2) { //calcular
     }
   }
 }
+// Libera memória alocada para as tabelas de soma Q1 e Q2
 void freeSumTables_Quadrado() {
     free(sumtableQ1);
     sumtableQ1=NULL;
@@ -250,18 +259,22 @@ void freeSumTables_Quadrado() {
     sumtableQ2=NULL;
 }
 
-// Function to calculate sumtables
-void calculateSumTables(Image img1, Image img2) { //calcular
+// Função para calcular tabelas de soma
+void calculateSumTables(Image img1, Image img2) {
+  // Verifica se as imagens não são nulas
   assert (img1 != NULL);
   assert (img2 != NULL);
+
+  // Aloca memória para a tabela de soma 2
   sumtable2 = (int*) malloc(sizeof(int) * img2->width * img2->height);
-    // Allocate memory for the sumtable
+  // Aloca memória para a tabela de soma 1
   sumtable1 = (int*) malloc(sizeof(int) * img1->width * img1->height);
+  // Preenche a tabela de soma 2
   for (int x=0; x<img2->width; x++){
     for (int y=0; y<img2->height; y++){
-      sumtable2[G(img2,x,y)]=ImageGetPixel(img2, x, y);
-      if (x> 0 && y>0){
-        sumtable2[G(img2,x,y)]-=sumtable2[G(img2,x-1,y-1)];
+      sumtable2[G(img2,x,y)]=ImageGetPixel(img2, x, y);     //o valor de cada elemento da tabela das somas é igual ao valor de cinzento do pixel (x,y) correspondente
+      if (x> 0 && y>0){                                     //+ o valor do elemento ao quadrado (x-1,y) + o valor do elemento ao quadrado (x,y-1) - o valor do elemento ao quadrado (x-1,y-1).
+        sumtable2[G(img2,x,y)]-=sumtable2[G(img2,x-1,y-1)]; //Para mais informações ver vídeo https://youtu.be/4Eh0y3LHTNU?si=1JzPZSPd9p0rDr-U
       }
       if (x > 0){
         sumtable2[G(img2,x,y)]+=sumtable2[G(img2,x-1,y)];
@@ -269,11 +282,13 @@ void calculateSumTables(Image img1, Image img2) { //calcular
       if (y > 0){
         sumtable2[G(img2,x,y)]+=sumtable2[G(img2,x,y-1)];
       }
+      //As condições anteriores são necessárias para evitar que sejam somados pixeis que não pertencem à imagem
     }
   }
+  // Preenche a tabela de soma 1
   for (int x=0; x<img1->width; x++){
     for (int y=0; y<img1->height; y++){
-      sumtable1[G(img1,x,y)]=ImageGetPixel(img1, x, y);
+      sumtable1[G(img1,x,y)]=ImageGetPixel(img1, x, y);   //igual ao calculo da soma 2
       if (x> 0 && y>0){
         sumtable1[G(img1,x,y)]-=sumtable1[G(img1,x-1,y-1)];
       }
@@ -286,6 +301,7 @@ void calculateSumTables(Image img1, Image img2) { //calcular
     }
   }
 }
+// Libera memória alocada para as tabelas de soma 1 e 2
 void freeSumTables() {
   free(sumtable1);
   sumtable1 = NULL;
@@ -650,81 +666,89 @@ void ImageBlend(Image img1, int x, int y, Image img2, double alpha) { ///
 /// Compare an image to a subimage of a larger image.
 /// Returns 1 (true) if img2 matches subimage of img1 at pos (x, y).
 /// Returns 0, otherwise.
-int ImageMatchSubImage(Image img1, int x, int y, Image img2) { ///
+// Função para verificar se uma subimagem coincide com uma parte específica de outra imagem
+int ImageMatchSubImage(Image img1, int x, int y, Image img2) {
+  // Verifica se as imagens não são nulas
+  assert(img1 != NULL);
+  assert(img2 != NULL);
 
-  assert (img1 != NULL);
-  assert (img2 != NULL);
-  int max_height = y+img2->height-1;
-  int max_width = x+img2->width-1;
+  // Calcula as coordenadas máximas da subimagem em img1
+  int max_height = y + img2->height - 1;
+  int max_width = x + img2->width - 1;
 
-  int sum_cols=0;
-  int sum_rows=0;
+  // Variáveis para armazenar as somas de colunas e linhas
+  int sum_cols = 0;
+  int sum_rows = 0;
 
-  for (int wid= 0; wid<img2->width; wid++){
-    sum_cols = sumtable1[G(img1,x+wid,max_height)];
-    if(x+wid > 0){
-      sum_cols -= sumtable1[G(img1, x+wid-1, max_height)];
+  // Verifica as somas das colunas
+  for (int wid = 0; wid < img2->width; wid++) {
+    // Calcula a soma da coluna na imagem maior (img1)
+    sum_cols = sumtable1[G(img1, x + wid, max_height)];
+    if (x + wid > 0) {
+      sum_cols -= sumtable1[G(img1, x + wid - 1, max_height)];
     }
-    if(y>0){
-      sum_cols -= sumtable1[G(img1, x+wid, y-1)];
+    if (y > 0) {
+      sum_cols -= sumtable1[G(img1, x + wid, y - 1)];
     }
-    if(x+wid>0 && y>0){
-      sum_cols += sumtable1[G(img1, x+wid-1, y-1)];
+    if (x + wid > 0 && y > 0) {
+      sum_cols += sumtable1[G(img1, x + wid - 1, y - 1)];
     }
-    if(wid==0){
-      COMPARACOES++;
-      //printf("#SumC %d SumTc %d\n",sum_cols,sumtable2[G(img2,wid,img2->height-1)]);
-      if(sum_cols != sumtable2[G(img2,wid,img2->height-1)]){
-        return 0;
-      }
-    }
-    else{
-      COMPARACOES++;
-      //printf("#SumC %d SumTc %d\n",sum_cols,sumtable2[G(img2,wid,img2->height-1)] - sumtable2[G(img2,wid-1,img2->height-1)]);
-      if(sum_cols != sumtable2[G(img2,wid,img2->height-1)] - sumtable2[G(img2,wid-1,img2->height-1)]){
-        return 0;
-      }
-    }
-  }
-  for (int hei= 0; hei<img2->height; hei++){
-    //printf("#estás a trabalhar mais?\n");
-    sum_rows = sumtable1[G(img1,max_width,y+hei)];
-    //printf("#SumR_first %d\n",sum_rows);
-    if(x > 0){
-      sum_rows -= sumtable1[G(img1, x-1, y+hei)];
-      //printf("#SumR_second %d\n",sum_rows);
-    }
-    if(y+hei>0){
-      sum_rows -= sumtable1[G(img1, max_width, y+hei-1)];
-      //printf("#SumR_third %d\n",sum_rows);
-    }
-    if(x>0 && y+hei>0){
-      sum_rows += sumtable1[G(img1, x-1, y+hei-1)];
-      //printf("#SumR_fim %d\n",sum_rows);
-    }
+
+    // Compara as somas das colunas da subimagem com as colunas correspondentes da img2
     COMPARACOES++;
-    if(hei==0){
-      //printf("#SumR %d SumTr %d\n",sum_rows,sumtable2[G(img2,img2->width-1,hei)]);
-      if(sum_rows != sumtable2[G(img2,img2->width-1,hei)]){
-        return 0;
+    if (wid == 0) {
+      if (sum_cols != sumtable2[G(img2, wid, img2->height - 1)]) {
+        return 0; // Retorna 0 se não houver correspondência
       }
-    }
-    else{
-      //printf("#SumR %d SumTr %d\n",sum_rows,sumtable2[G(img2,img2->width-1,hei)] - sumtable2[G(img2,img2->width-1,hei-1)]);
-      if(sum_rows != sumtable2[G(img2,img2->width-1,hei)] - sumtable2[G(img2,img2->width-1,hei-1)]){
-        return 0;
+    } else {
+      if (sum_cols != sumtable2[G(img2, wid, img2->height - 1)] - sumtable2[G(img2, wid - 1, img2->height - 1)]) {
+        return 0; // Retorna 0 se não houver correspondência
       }
     }
   }
-  for (int i= 0; i<img2->height; i++){
-    for (int j=0; j<img2->width; j++){
+
+  // Verifica as somas das linhas
+  for (int hei = 0; hei < img2->height; hei++) {
+    // Calcula a soma da linha da subimagem
+    sum_rows = sumtable1[G(img1, max_width, y + hei)];
+    if (x > 0) {
+      sum_rows -= sumtable1[G(img1, x - 1, y + hei)];
+    }
+    if (y + hei > 0) {
+      sum_rows -= sumtable1[G(img1, max_width, y + hei - 1)];
+    }
+    if (x > 0 && y + hei > 0) {
+      sum_rows += sumtable1[G(img1, x - 1, y + hei - 1)];
+    }
+
+    // Compara as somas das linhas da subimagem com as linhas correspondentes da img2
+    COMPARACOES++;
+    if (hei == 0) {
+      if (sum_rows != sumtable2[G(img2, img2->width - 1, hei)]) {
+        return 0; // Retorna 0 se não houver correspondência
+      }
+    } else {
+      if (sum_rows != sumtable2[G(img2, img2->width - 1, hei)] - sumtable2[G(img2, img2->width - 1, hei - 1)]) {
+        return 0; // Retorna 0 se não houver correspondência
+      }
+    }
+  }
+  // Estas comparações entre linhas e colunas permitem, excluir casos em que somente o pixel final troca com por exemplo o superior
+  // Verifica se os pixeis nas posições correspondentes das duas imagens são iguais
+  for (int i = 0; i < img2->height; i++) {
+    for (int j = 0; j < img2->width; j++) {
       COMPARACOES++;
-      if (ImageGetPixel(img1, x+j, y+i) != ImageGetPixel(img2, j, i)){ //verifica se os pixeis das duas imagens são diferentes
-        return 0; //se a condiçao for verificada o loop é interrompido e retorna 0
+      if (ImageGetPixel(img1, x + j, y + i) != ImageGetPixel(img2, j, i)) {
+        return 0; // Retorna 0 se os pixeis não coincidirem
       }
     }
   }
-  return 1; //se a condiçao nao for verificada, conclui-se que existe "match" entre as imagens e retorna 1
+  // Acabamos por ter de comparar pixel a pixel na mesma pq vai sempre existir um caso muito específico em que vamos ter de comparar pixel a pixel
+  // Este conjunto de comparações tanto a nível de somas normais e ao quadrado (ImageLocateSubImage), como comparar a soma das linhas e colunas de cada imagem
+  // Permitem excluir casos mais "gerais" de imagens que possam passar muito tempo a comparar-se pixel a pixel
+  // Permitindo assim uma maior rapidez geral no código
+  // Só casos já muito específicos é que conseguem passar pelas 4 verificações que fizemos
+  return 1; // Retorna 1 se todas as verificações foram bem-sucedidas, indicando uma correspondência
 }
 
 /// Locate a subimage inside another image.
@@ -732,48 +756,62 @@ int ImageMatchSubImage(Image img1, int x, int y, Image img2) { ///
 /// If a match is found, returns 1 and matching position is set in vars (*px, *py).
 /// If no match is found, returns 0 and (*px, *py) are left untouched.
 
-int ImageLocateSubImage(Image img1, int* px, int* py, Image img2) { ///
-  assert (img1 != NULL);
-  assert (img2 != NULL);
-  // Insert your code here!
-  calculateSumTables(img1,img2);
-  calculateSumTables_Quadrado(img1,img2);
-  int sum2 = sumtable2[G(img2,img2->width-1,img2->height-1)];
-  int sumQ2 = sumtableQ2[G(img2,img2->width-1,img2->height-1)];
-  for (int i = img2->height-1; i < img1->height; i++) {
-      for (int j = img2->width-1; j < img1->width; j++) {
-        int sum1 = sumtable1[G(img1,j,i)];
-        int sumQ1 = sumtableQ1[G(img1,j,i)];
-        if (j - img2->width+1 > 0) {
-          sum1 -= sumtable1[G(img1, j - img2->width, i)];
-          sumQ1 -= sumtableQ1[G(img1, j - img2->width, i)];
-        }
-        if (i-img2->height+1 > 0) {
-          sum1 -= sumtable1[G(img1, j, i-img2->height)];
-          sumQ1 -= sumtableQ1[G(img1, j, i-img2->height)];
-        }
-        if (j - img2->width+1 > 0 && i - img2->height+1 > 0) {
-          sum1 += sumtable1[G(img1, j - img2->width, i - img2->height)];
-          sumQ1 += sumtableQ1[G(img1, j - img2->width, i - img2->height)];
-        }
-        // Compare the sums to check if the subimages match
+// Função para localizar uma subimagem em outra imagem
+int ImageLocateSubImage(Image img1, int* px, int* py, Image img2) {
+  // Verifica se as imagens não são nulas
+  assert(img1 != NULL);
+  assert(img2 != NULL);
+
+  // Chama as funções para calcular as tabelas de soma
+  calculateSumTables(img1, img2);
+  calculateSumTables_Quadrado(img1, img2);
+
+  // Obtém as somas finais das tabelas da img2
+  int sum2 = sumtable2[G(img2, img2->width - 1, img2->height - 1)];
+  int sumQ2 = sumtableQ2[G(img2, img2->width - 1, img2->height - 1)];
+
+  // Itera sobre a imagem maior para procurar a subimagem
+  for (int i = img2->height - 1; i < img1->height; i++) {
+    for (int j = img2->width - 1; j < img1->width; j++) {
+      // Obtém as somas locais das tabelas da img1
+      int sum1 = sumtable1[G(img1, j, i)];
+      int sumQ1 = sumtableQ1[G(img1, j, i)];
+
+      // Ajusta as somas subtraindo as partes que não são necessárias
+      if (j - img2->width + 1 > 0) {
+        sum1 -= sumtable1[G(img1, j - img2->width, i)];
+        sumQ1 -= sumtableQ1[G(img1, j - img2->width, i)];
+      }
+      if (i - img2->height + 1 > 0) {
+        sum1 -= sumtable1[G(img1, j, i - img2->height)];
+        sumQ1 -= sumtableQ1[G(img1, j, i - img2->height)];
+      }
+      if (j - img2->width + 1 > 0 && i - img2->height + 1 > 0) {
+        sum1 += sumtable1[G(img1, j - img2->width, i - img2->height)];
+        sumQ1 += sumtableQ1[G(img1, j - img2->width, i - img2->height)];
+      }
+
+      // Compara as somas para verificar se as sub-imagens correspondem
+      COMPARACOES++;
+      if (sum1 == sum2) {
         COMPARACOES++;
-        if (sum1 == sum2) {
-          COMPARACOES++;
-          if(sumQ1 == sumQ2){
-            if(ImageMatchSubImage(img1, j-img2->width+1, i-img2->height+1, img2)){
-              *px = j;
-              *py = i;
-              freeSumTables();
-              freeSumTables_Quadrado();
-              return 1;
-            }
+        if (sumQ1 == sumQ2) {
+          // Usamos as duas sumtables (ao quadrado e normal), pois imagens com a mesma área podem ter tons de cinzento diferente, e assim garantimos que pelos menos os tons de cinzentos são todos iguais
+          // Se as somas coincidirem, verifica se as sub-imagens correspondem
+          if (ImageMatchSubImage(img1, j - img2->width + 1, i - img2->height + 1, img2)) {
+            // Se houver correspondência, atribui as coordenadas e liberta a memória
+            *px = j - img2->width + 1;
+            *py = i - img2->height + 1;
+            freeSumTables();
+            freeSumTables_Quadrado();
+            return 1; // Retorna 1 indicando correspondência encontrada
           }
         }
       }
+    }
   }
 
-  // Clean up and return 0 if no match is found
+  // Liberta a memória e retorna 0 se nenhuma correspondência for encontrada
   freeSumTables();
   freeSumTables_Quadrado();
   return 0;
@@ -860,36 +898,38 @@ void ImageBlur(Image img, int dx, int dy){ //Versão otimizada da função Image
 }
 
 int ImageMatchSubImage2(Image img1, int x, int y, Image img2) { ///
-  assert (img1 != NULL);
-  assert (img2 != NULL);
-  assert (ImageValidPos(img1, x, y));
-  // Insert your code here!
-  for (int i=0; i<img2->height; i++){
-    for (int j=0; j<img2->width; j++){
+  assert(img1 != NULL);
+  assert(img2 != NULL);
+  assert(ImageValidPos(img1, x, y));
+  // Iteração sobre os píxeis da subimagem (img2).
+  for (int i = 0; i < img2->height; i++) {
+    for (int j = 0; j < img2->width; j++) {
       COMPARACOES++;
-      if (ImageGetPixel(img1, x+j, y+i) != ImageGetPixel(img2, j, i)){
-        return 0; //se a condiçao for verificada o loop é interrompido e retorna 0
+      // Compara os píxeis correspondentes em ambas as imagens.
+      if (ImageGetPixel(img1, x + j, y + i) != ImageGetPixel(img2, j, i)) {
+        return 0; // Se a condição não for satisfeita, interrompe o loop e retorna 0.
       }
     }
   }
-  return 1; //se a condiçao nao for verificada retorna 1
+  return 1; // Se todos os píxeis coincidirem, retorna 1.
 }
 /// Locate a subimage inside another image.
 /// Searches for img2 inside img1.
 /// If a match is found, returns 1 and matching position is set in vars (*px, *py).
 /// If no match is found, returns 0 and (*px, *py) are left untouched.
 int ImageLocateSubImage2(Image img1, int* px, int* py, Image img2) { ///
-  assert (img1 != NULL);
-  assert (img2 != NULL);
-  // Insert your code here!
-  for (int i=0; i<img1->height - img2->height + 1; i++){
-    for (int j=0; j<img1->width - img2->width + 1; j++){
-      if (ImageMatchSubImage2(img1, j, i, img2) == 1){
+  assert(img1 != NULL);
+  assert(img2 != NULL);
+  // Iteração sobre as posições possíveis na imagem maior (img1).
+  for (int i = 0; i < img1->height - img2->height + 1; i++) {
+    for (int j = 0; j < img1->width - img2->width + 1; j++) {
+      // Verifica se a subimagem coincide com a parte da imagem especificada.
+      if (ImageMatchSubImage2(img1, j, i, img2) == 1) {
         *px = j;
         *py = i;
-        return 1;
+        return 1; // Se houver uma correspondência, atribui as coordenadas e retorna 1.
       }
     }
   }
-  return 0;
+  return 0; // Se não encontrar correspondência, retorna 0.
 }

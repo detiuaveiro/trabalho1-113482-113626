@@ -94,10 +94,10 @@ int main(int argc, char* argv[]) {
 
     InstrReset();
     for(int i = 5; i>=1; i--){
-      Image crop = ImageCrop(nb1,0,0,(int)ImageWidth(nb1)/i,(int)ImageHeight(nb1)/i);
-      int size = (int)ImageWidth(nb1)/i * (int)ImageHeight(nb1)/i;
+      Image crop = ImageCrop(nb1,0,0,(int)ImageWidth(nb1)/i,(int)ImageHeight(nb1));
+      int size = (int)ImageWidth(crop) * (int)ImageHeight(crop);
       InstrReset();
-      printf("\n# Não otimizado:\n # Locate image (size: %d - window %dx%d) in image (size: %d - window %dx%d)\n",size,(int)ImageWidth(nb1)/i,(int)ImageHeight(nb1)/i, n,ImageWidth(img1),ImageHeight(img1));
+      printf("\n# Não otimizado:\n # Locate image (size: %d - window %dx%d) in image (size: %d - window %dx%d)\n",size,(int)ImageWidth(crop),(int)ImageHeight(crop), n,ImageWidth(img1),ImageHeight(img1));
       res = ImageLocateSubImage2(nb1,&px,&py,crop);
       printf("\n# Best Case = encontra (Sucess = %d FOUND(%d,%d))\n",res,px,py);
       InstrPrint();
@@ -115,18 +115,19 @@ int main(int argc, char* argv[]) {
 
     InstrReset();
     for(int i = 5; i>=1; i--){
-      Image crop = ImageCrop(nb1,0,0,(int)ImageWidth(nb1)/i,(int)ImageHeight(nb1)/i);
-      int size = (int)ImageWidth(nb1)/i * (int)ImageHeight(nb1)/i;
+      Image crop = ImageCrop(nb1,0,0,(int)ImageWidth(nb1)/i,(int)ImageHeight(nb1));
+      int size = (int)ImageWidth(crop) * (int)ImageHeight(crop);
       InstrReset();
-      printf("\n# Otimizado:\n # Locate image (size: %d - window %dx%d) in image (size: %d - window %dx%d)\n",size,(int)ImageWidth(nb1)/i,(int)ImageHeight(nb1)/i, n,ImageWidth(img1),ImageHeight(img1));
+      printf("\n# Otimizado:\n # Locate image (size: %d - window %dx%d) in image (size: %d - window %dx%d)\n",size,(int)ImageWidth(crop),(int)ImageHeight(crop), n,ImageWidth(img1),ImageHeight(img1));
       res = ImageLocateSubImage(nb1,&px,&py,crop);
-      printf("\n# Best Case = encontra (Sucess = %d FOUND(%d,%d))\n",res,px,py);
+      printf("\n# Best Case ?=? encontra (Sucess = %d FOUND(%d,%d))\n",res,px,py);
       InstrPrint();
-      ImageSetPixel(crop,ImageWidth(nb1)/i-1,ImageHeight(nb1)/i-1,2);
       InstrReset();
+      MassSetting(crop,101);
       res = ImageLocateSubImage(nb1,&px,&py,crop);
-      printf("\n# Worst Case = não encontra (Sucess = %d NOT FOUND)\n",res);
+      printf("\n# Best Case ?=? não encontra (Sucess = %d NOTFOUND)\n",res);
       InstrPrint();
+      InstrReset();
       ImageDestroy(&crop);
     }
     InstrReset();
