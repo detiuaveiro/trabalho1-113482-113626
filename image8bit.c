@@ -202,11 +202,56 @@ Image ImageCreate(int width, int height, uint8 maxval) {
 
 int *sumtable1;
 int *sumtable2;
+int *sumtableQ1;
+int *sumtableQ2;
 
 static inline int G(Image img, int x, int y);
 
 // Function to calculate sumtables
-void calculateSumTables(Image img1, Image img2) { //AQUIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
+void calculateSumTables_Quadrado(Image img1, Image img2) { //calcular
+  assert (img1 != NULL);
+  assert (img2 != NULL);
+  sumtableQ2 = (int*) malloc(sizeof(int) * img2->width * img2->height);
+    // Allocate memory for the sumtable
+  sumtableQ1 = (int*) malloc(sizeof(int) * img1->width * img1->height);
+  for (int x=0; x<img2->width; x++){
+    for (int y=0; y<img2->height; y++){
+      sumtableQ2[G(img2,x,y)]=ImageGetPixel(img2, x, y)*ImageGetPixel(img2, x, y);
+      if (x> 0 && y>0){
+        sumtableQ2[G(img2,x,y)]-=sumtableQ2[G(img2,x-1,y-1)];
+      }
+      if (x > 0){
+        sumtableQ2[G(img2,x,y)]+=sumtableQ2[G(img2,x-1,y)];
+      }
+      if (y > 0){
+        sumtableQ2[G(img2,x,y)]+=sumtableQ2[G(img2,x,y-1)];
+      }
+    }
+  }
+  for (int x=0; x<img1->width; x++){
+    for (int y=0; y<img1->height; y++){
+      sumtableQ1[G(img1,x,y)]=ImageGetPixel(img1, x, y)*ImageGetPixel(img1, x, y);
+      if (x> 0 && y>0){
+        sumtableQ1[G(img1,x,y)]-=sumtableQ1[G(img1,x-1,y-1)];
+      }
+      if (x > 0){
+        sumtableQ1[G(img1,x,y)]+=sumtableQ1[G(img1,x-1,y)];
+      }
+      if (y > 0){
+        sumtableQ1[G(img1,x,y)]+=sumtableQ1[G(img1,x,y-1)];
+      }
+    }
+  }
+}
+void freeSumTables_Quadrado() {
+    free(sumtableQ1);
+    free(sumtableQ2);
+}
+
+// Function to calculate sumtables
+void calculateSumTables(Image img1, Image img2) { //calcular
+  assert (img1 != NULL);
+  assert (img2 != NULL);
   sumtable2 = (int*) malloc(sizeof(int) * img2->width * img2->height);
     // Allocate memory for the sumtable
   sumtable1 = (int*) malloc(sizeof(int) * img1->width * img1->height);
@@ -602,9 +647,71 @@ void ImageBlend(Image img1, int x, int y, Image img2, double alpha) { ///
 /// Returns 1 (true) if img2 matches subimage of img1 at pos (x, y).
 /// Returns 0, otherwise.
 int ImageMatchSubImage(Image img1, int x, int y, Image img2) { ///
+
   assert (img1 != NULL);
   assert (img2 != NULL);
+  int max_height = y+img2->height-1;
+  int max_width = x+img2->width-1;
 
+  int sum_cols=0;
+  int sum_rows=0;
+
+  for (int wid= 0; wid<img2->width; wid++){
+    sum_cols = sumtable1[G(img1,x+wid,max_height)];
+    if(x+wid > 0){
+      sum_cols -= sumtable1[G(img1, x+wid-1, max_height)];
+    }
+    if(y>0){
+      sum_cols -= sumtable1[G(img1, x+wid, y-1)];
+    }
+    if(x+wid>0 && y>0){
+      sum_cols += sumtable1[G(img1, x+wid-1, y-1)];
+    }
+    if(wid==0){
+      COMPARACOES++;
+      //printf("#SumC %d SumTc %d\n",sum_cols,sumtable2[G(img2,wid,img2->height-1)]);
+      if(sum_cols != sumtable2[G(img2,wid,img2->height-1)]){
+        return 0;
+      }
+    }
+    else{
+      COMPARACOES++;
+      //printf("#SumC %d SumTc %d\n",sum_cols,sumtable2[G(img2,wid,img2->height-1)] - sumtable2[G(img2,wid-1,img2->height-1)]);
+      if(sum_cols != sumtable2[G(img2,wid,img2->height-1)] - sumtable2[G(img2,wid-1,img2->height-1)]){
+        return 0;
+      }
+    }
+  }
+  for (int hei= 0; hei<img2->height; hei++){
+    //printf("#estás a trabalhar mais?\n");
+    sum_rows = sumtable1[G(img1,max_width,y+hei)];
+    //printf("#SumR_first %d\n",sum_rows);
+    if(x > 0){
+      sum_rows -= sumtable1[G(img1, x-1, y+hei)];
+      //printf("#SumR_second %d\n",sum_rows);
+    }
+    if(y+hei>0){
+      sum_rows -= sumtable1[G(img1, max_width, y+hei-1)];
+      //printf("#SumR_third %d\n",sum_rows);
+    }
+    if(x>0 && y+hei>0){
+      sum_rows += sumtable1[G(img1, x-1, y+hei-1)];
+      //printf("#SumR_fim %d\n",sum_rows);
+    }
+    COMPARACOES++;
+    if(hei==0){
+      //printf("#SumR %d SumTr %d\n",sum_rows,sumtable2[G(img2,img2->width-1,hei)]);
+      if(sum_rows != sumtable2[G(img2,img2->width-1,hei)]){
+        return 0;
+      }
+    }
+    else{
+      //printf("#SumR %d SumTr %d\n",sum_rows,sumtable2[G(img2,img2->width-1,hei)] - sumtable2[G(img2,img2->width-1,hei-1)]);
+      if(sum_rows != sumtable2[G(img2,img2->width-1,hei)] - sumtable2[G(img2,img2->width-1,hei-1)]){
+        return 0;
+      }
+    }
+  }
   for (int i= 0; i<img2->height; i++){
     for (int j=0; j<img2->width; j++){
       COMPARACOES++;
@@ -620,32 +727,43 @@ int ImageMatchSubImage(Image img1, int x, int y, Image img2) { ///
 /// Searches for img2 inside img1.
 /// If a match is found, returns 1 and matching position is set in vars (*px, *py).
 /// If no match is found, returns 0 and (*px, *py) are left untouched.
+
 int ImageLocateSubImage(Image img1, int* px, int* py, Image img2) { ///
   assert (img1 != NULL);
   assert (img2 != NULL);
   // Insert your code here!
   calculateSumTables(img1,img2);
+  calculateSumTables_Quadrado(img1,img2);
   int sum2 = sumtable2[G(img2,img2->width-1,img2->height-1)];
+  int sumQ2 = sumtableQ2[G(img2,img2->width-1,img2->height-1)];
   for (int i = img2->height-1; i < img1->height; i++) {
       for (int j = img2->width-1; j < img1->width; j++) {
         int sum1 = sumtable1[G(img1,j,i)];
+        int sumQ1 = sumtableQ1[G(img1,j,i)];
         if (j - img2->width+1 > 0) {
           sum1 -= sumtable1[G(img1, j - img2->width, i)];
+          sumQ1 -= sumtableQ1[G(img1, j - img2->width, i)];
         }
         if (i-img2->height+1 > 0) {
           sum1 -= sumtable1[G(img1, j, i-img2->height)];
+          sumQ1 -= sumtableQ1[G(img1, j, i-img2->height)];
         }
         if (j - img2->width+1 > 0 && i - img2->height+1 > 0) {
           sum1 += sumtable1[G(img1, j - img2->width, i - img2->height)];
+          sumQ1 += sumtableQ1[G(img1, j - img2->width, i - img2->height)];
         }
         // Compare the sums to check if the subimages match
         COMPARACOES++;
         if (sum1 == sum2) {
-          if(ImageMatchSubImage(img1, j-img2->width+1, i-img2->height+1, img2)){
-            *px = j;
-            *py = i;
-            freeSumTables();
-            return 1;
+          COMPARACOES++;
+          if(sumQ1 == sumQ2){
+            if(ImageMatchSubImage(img1, j-img2->width+1, i-img2->height+1, img2)){
+              *px = j;
+              *py = i;
+              freeSumTables();
+              freeSumTables_Quadrado();
+              return 1;
+            }
           }
         }
       }
@@ -653,6 +771,7 @@ int ImageLocateSubImage(Image img1, int* px, int* py, Image img2) { ///
 
   // Clean up and return 0 if no match is found
   freeSumTables();
+  freeSumTables_Quadrado();
   return 0;
 }
 
@@ -732,4 +851,39 @@ void ImageBlur(Image img, int dx, int dy){ //Versão otimizada da função Image
       ImageSetPixel(img, x, y, (blur + total/2)/total); //atribui o valor de cinzento ao pixel, calculado através da expressão do blur
     }
   }
+}
+
+int ImageMatchSubImage2(Image img1, int x, int y, Image img2) { ///
+  assert (img1 != NULL);
+  assert (img2 != NULL);
+  assert (ImageValidPos(img1, x, y));
+  // Insert your code here!
+  for (int i=0; i<img2->height; i++){
+    for (int j=0; j<img2->width; j++){
+      COMPARACOES++;
+      if (ImageGetPixel(img1, x+j, y+i) != ImageGetPixel(img2, j, i)){
+        return 0; //se a condiçao for verificada o loop é interrompido e retorna 0
+      }
+    }
+  }
+  return 1; //se a condiçao nao for verificada retorna 1
+}
+/// Locate a subimage inside another image.
+/// Searches for img2 inside img1.
+/// If a match is found, returns 1 and matching position is set in vars (*px, *py).
+/// If no match is found, returns 0 and (*px, *py) are left untouched.
+int ImageLocateSubImage2(Image img1, int* px, int* py, Image img2) { ///
+  assert (img1 != NULL);
+  assert (img2 != NULL);
+  // Insert your code here!
+  for (int i=0; i<img1->height - img2->height + 1; i++){
+    for (int j=0; j<img1->width - img2->width + 1; j++){
+      if (ImageMatchSubImage2(img1, j, i, img2) == 1){
+        *px = j;
+        *py = i;
+        return 1;
+      }
+    }
+  }
+  return 0;
 }
