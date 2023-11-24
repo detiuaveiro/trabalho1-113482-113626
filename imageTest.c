@@ -53,29 +53,37 @@ int main(int argc, char* argv[]) {
     Image cp1 = ImageCrop(img1, 0, 0, ImageWidth(img1), ImageHeight(img1));
 
     printf("\n===========\n");
-    Image nb1 = ImageCrop(cp1, 0, 0, ImageWidth(img1), ImageHeight(img1));
+    Image nb1 = ImageCrop(cp1, 0, 0, ImageWidth(img1), ImageHeight(img1));//aqui
     printf("\n# Não otimizado:\n # BLUR image (size: %d - window %dx%d) com dx = %d e dy = %d\n", n,ImageWidth(img1),ImageHeight(img1),10,10);
     InstrReset();
     ImageBlur2(nb1,10,10);
     InstrPrint();
 
-    nb1 = ImageCrop(cp1, 0, 0, ImageWidth(img1), ImageHeight(img1));
+    ImageDestroy(&nb1);
+
+    nb1 = ImageCrop(cp1, 0, 0, ImageWidth(img1), ImageHeight(img1));//aqui
     printf("\n# Não otimizado:\n # BLUR image (size: %d - window %dx%d) com dx = %d e dy = %d\n", n,ImageWidth(img1),ImageHeight(img1),20,20);
     InstrReset();
     ImageBlur2(nb1,20,20);
     InstrPrint();
 
-    nb1 = ImageCrop(cp1, 0, 0, ImageWidth(img1), ImageHeight(img1));
+    ImageDestroy(&nb1);
+
+    nb1 = ImageCrop(cp1, 0, 0, ImageWidth(img1), ImageHeight(img1));//74
     printf("\n# Otimizado:\n # BLUR image (size: %d - window %dx%d) com dx = %d e dy = %d\n", n,ImageWidth(img1),ImageHeight(img1),10,10);
     InstrReset();
     ImageBlur(nb1,10,10);
     InstrPrint();
 
-    nb1 = ImageCrop(cp1, 0, 0, ImageWidth(img1), ImageHeight(img1));
+    ImageDestroy(&nb1);
+
+    nb1 = ImageCrop(cp1, 0, 0, ImageWidth(img1), ImageHeight(img1));//84
     printf("\n# Otimizado:\n # BLUR image (size: %d - window %dx%d) com dx = %d e dy = %d\n", n,ImageWidth(img1),ImageHeight(img1),20,20);
     InstrReset();
     ImageBlur(nb1,20,20);
     InstrPrint();
+
+    ImageDestroy(&nb1);
 
     printf("\n===========\n");
     InstrReset();
@@ -98,7 +106,9 @@ int main(int argc, char* argv[]) {
       res = ImageLocateSubImage2(nb1,&px,&py,crop);
       printf("\n# Worst Case = não encontra (Sucess = %d NOT FOUND)\n",res);
       InstrPrint();
+      ImageDestroy(&crop);
     }
+    ImageDestroy(&nb1);
 
     nb1 = ImageCrop(cp1, 0, 0, ImageWidth(img1), ImageHeight(img1));
     MassSetting(nb1, 100);
@@ -117,8 +127,9 @@ int main(int argc, char* argv[]) {
       res = ImageLocateSubImage(nb1,&px,&py,crop);
       printf("\n# Worst Case = não encontra (Sucess = %d NOT FOUND)\n",res);
       InstrPrint();
+      ImageDestroy(&crop);
     }
-
+    InstrReset();
 
     ImageDestroy(&img1);
     ImageDestroy(&cp1);

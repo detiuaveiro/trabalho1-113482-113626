@@ -245,7 +245,9 @@ void calculateSumTables_Quadrado(Image img1, Image img2) { //calcular
 }
 void freeSumTables_Quadrado() {
     free(sumtableQ1);
+    sumtableQ1=NULL;
     free(sumtableQ2);
+    sumtableQ2=NULL;
 }
 
 // Function to calculate sumtables
@@ -285,8 +287,10 @@ void calculateSumTables(Image img1, Image img2) { //calcular
   }
 }
 void freeSumTables() {
-    free(sumtable1);
-    free(sumtable2);
+  free(sumtable1);
+  sumtable1 = NULL;
+  free(sumtable2);
+  sumtable2 = NULL;
 }
 
 /// Destroy the image pointed to by (*imgp).
@@ -807,6 +811,7 @@ void ImageBlur2(Image img, int dx, int dy) { ///Esta função itera por todos os
       ImageSetPixel(img, x, y, (uint8)((sum+counter/2)/counter)); //atribui o valor de cinzento ao pixel, calculado através da expressão do blur
     }
   }
+  ImageDestroy(&blured);
 }
 
 void ImageBlur(Image img, int dx, int dy){ //Versão otimizada da função ImageBlur, através da tabela das somas
@@ -851,6 +856,8 @@ void ImageBlur(Image img, int dx, int dy){ //Versão otimizada da função Image
       ImageSetPixel(img, x, y, (blur + total/2)/total); //atribui o valor de cinzento ao pixel, calculado através da expressão do blur
     }
   }
+  free(sumtable);
+  sumtable=NULL;
 }
 
 int ImageMatchSubImage2(Image img1, int x, int y, Image img2) { ///
