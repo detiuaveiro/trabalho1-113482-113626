@@ -817,7 +817,6 @@ void ImageBlur2(Image img, int dx, int dy) { ///Esta função itera por todos os
 void ImageBlur(Image img, int dx, int dy){ //Versão otimizada da função ImageBlur, através da tabela das somas
   assert(img!=NULL);
   int *sumtable; //declaração da tabela de somas
-  int blur, initial_x, initial_y, x_end, y_end, x_length, y_length, total; //declaração de variaveis auxiliares
   sumtable = (int*) malloc(sizeof(uint8*)*img->width *img->height); //aloca memoria para a tabela de somas, que é igual ao numero de pixeis da imagem
   for (int x=0; x< img->width; x++){ //itera-se por todos os pixeis da imagem e calcula-se a tabela de somas,
     for (int y=0; y<img->height; y++){  //dependendo do valor de cinzento de cada pixel
@@ -835,15 +834,15 @@ void ImageBlur(Image img, int dx, int dy){ //Versão otimizada da função Image
   }//procede-se à aplicação do filtro de blur
   for (int x=0; x< img->width; x++){
     for (int y=0; y<img->height; y++){
-      initial_x=MAX(x-dx,0); //evitar que as coordenadas da caixa do blur ultrapassem os limites da imagem
-      initial_y=MAX(y-dy,0);
-      x_end=MIN(x+dx, img->width-1); //evitar que as coordenadas da caixa do blur ultrapassem os limites da imagem
-      y_end=MIN(y+dy, img->height-1);
-      x_length=x_end-initial_x+1; //calcular o comprimento e a largura da caixa do blur
-      y_length=y_end-initial_y+1;
-      total=x_length*y_length; //numero de elementos da tabela de somas
+      int initial_x=MAX(x-dx,0); //evitar que as coordenadas da caixa do blur ultrapassem os limites da imagem
+      int initial_y=MAX(y-dy,0);
+      int x_end=MIN(x+dx, img->width-1); //evitar que as coordenadas da caixa do blur ultrapassem os limites da imagem
+      int y_end=MIN(y+dy, img->height-1);
+      int x_length=x_end-initial_x+1; //calcular o comprimento e a largura da caixa do blur
+      int y_length=y_end-initial_y+1;
+      int total=x_length*y_length; //numero de elementos da tabela de somas
       //Devido à dimensão da caixa fazem-se as seguintes operações para calcular o blur
-      blur=sumtable[G(img, x_end, y_end)]; //soma-se o valor do elemento (x,y) da tabela das somas
+      int blur=sumtable[G(img, x_end, y_end)]; //soma-se o valor do elemento (x,y) da tabela das somas
       if (initial_x > 0){
         blur-=sumtable[G(img,initial_x-1,y_end)]; //subtrai-se este elemento, pois este tem a soma do valor de pixeis fora dos limites do blur
       }
