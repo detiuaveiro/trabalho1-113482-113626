@@ -28,6 +28,7 @@
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h> //alteração
 #include "instrumentation.h"
 
 // The data structure
@@ -151,12 +152,14 @@ void ImageInit(void) { ///
   InstrCalibrate();
   InstrName[0] = "pixmem";  // InstrCount[0] will count pixel array acesses
   // Name other counters here...
-  InstrName[1]= "comparacoes";
+  InstrName[1]= "pixcomp";
+  InstrName[2]= "iterações";
 }
 
 // Macros to simplify accessing instrumentation counters:
 #define PIXMEM InstrCount[0]
 #define COMPARACOES InstrCount[1] //macro para analise de complexidade ImageLocateSubImage
+#define ITER InstrCount[2]
 // Add more macros here...
 
 // TIP: Search for PIXMEM or InstrCount to see where it is incremented!
@@ -222,6 +225,7 @@ void calculateSumTables_Quadrado(Image img1, Image img2) {
   // Preenche a tabela de soma Q2
   for (int x=0; x<img2->width; x++){
     for (int y=0; y<img2->height; y++){
+      ITER++;
       sumtableQ2[G(img2,x,y)]=ImageGetPixel(img2, x, y)*ImageGetPixel(img2, x, y);//o valor de cada elemento da tabela das somas é igual ao valor de cinzento ao quadrado do pixel (x,y) correspondente
       if (x> 0 && y>0){                                                           //+ o valor do elemento ao quadrado (x-1,y) + o valor do elemento ao quadrado (x,y-1) - o valor do elemento ao quadrado (x-1,y-1).
         sumtableQ2[G(img2,x,y)]-=sumtableQ2[G(img2,x-1,y-1)];                     //Para mais informações ver vídeo https://youtu.be/4Eh0y3LHTNU?si=1JzPZSPd9p0rDr-U
@@ -238,6 +242,7 @@ void calculateSumTables_Quadrado(Image img1, Image img2) {
   // Preenche a tabela de soma Q1
   for (int x=0; x<img1->width; x++){
     for (int y=0; y<img1->height; y++){
+      ITER++;
       sumtableQ1[G(img1,x,y)]=ImageGetPixel(img1, x, y)*ImageGetPixel(img1, x, y);//igual ao calculo da soma Q2
       if (x> 0 && y>0){
         sumtableQ1[G(img1,x,y)]-=sumtableQ1[G(img1,x-1,y-1)];
@@ -272,6 +277,7 @@ void calculateSumTables(Image img1, Image img2) {
   // Preenche a tabela de soma 2
   for (int x=0; x<img2->width; x++){
     for (int y=0; y<img2->height; y++){
+      ITER++;
       sumtable2[G(img2,x,y)]=ImageGetPixel(img2, x, y);     //o valor de cada elemento da tabela das somas é igual ao valor de cinzento do pixel (x,y) correspondente
       if (x> 0 && y>0){                                     //+ o valor do elemento ao quadrado (x-1,y) + o valor do elemento ao quadrado (x,y-1) - o valor do elemento ao quadrado (x-1,y-1).
         sumtable2[G(img2,x,y)]-=sumtable2[G(img2,x-1,y-1)]; //Para mais informações ver vídeo https://youtu.be/4Eh0y3LHTNU?si=1JzPZSPd9p0rDr-U
@@ -288,6 +294,7 @@ void calculateSumTables(Image img1, Image img2) {
   // Preenche a tabela de soma 1
   for (int x=0; x<img1->width; x++){
     for (int y=0; y<img1->height; y++){
+      ITER++;
       sumtable1[G(img1,x,y)]=ImageGetPixel(img1, x, y);   //igual ao calculo da soma 2
       if (x> 0 && y>0){
         sumtable1[G(img1,x,y)]-=sumtable1[G(img1,x-1,y-1)];
@@ -640,6 +647,7 @@ void ImagePaste(Image img1, int x, int y, Image img2) { ///
 
   for (int i = 0; i < img2->height; i++) {
     for (int j = 0; j < img2->width; j++) {
+      ITER++;
       ImageSetPixel(img1, x + j, y + i, ImageGetPixel(img2, j, i)); //atribui o valor de cinzento dos pixeis correspondentes à nova imagem
     }
   }
@@ -682,6 +690,7 @@ int ImageMatchSubImage(Image img1, int x, int y, Image img2) {
 
   // Verifica as somas das colunas
   for (int wid = 0; wid < img2->width; wid++) {
+    ITER++;
     // Calcula a soma da coluna na imagem maior (img1)
     sum_cols = sumtable1[G(img1, x + wid, max_height)];
     if (x + wid > 0) {
@@ -709,6 +718,7 @@ int ImageMatchSubImage(Image img1, int x, int y, Image img2) {
 
   // Verifica as somas das linhas
   for (int hei = 0; hei < img2->height; hei++) {
+    ITER++;
     // Calcula a soma da linha da subimagem
     sum_rows = sumtable1[G(img1, max_width, y + hei)];
     if (x > 0) {
@@ -737,6 +747,7 @@ int ImageMatchSubImage(Image img1, int x, int y, Image img2) {
   // Verifica se os pixeis nas posições correspondentes das duas imagens são iguais
   for (int i = 0; i < img2->height; i++) {
     for (int j = 0; j < img2->width; j++) {
+      ITER++;
       COMPARACOES++;
       if (ImageGetPixel(img1, x + j, y + i) != ImageGetPixel(img2, j, i)) {
         return 0; // Retorna 0 se os pixeis não coincidirem
@@ -773,6 +784,7 @@ int ImageLocateSubImage(Image img1, int* px, int* py, Image img2) {
   // Itera sobre a imagem maior para procurar a subimagem
   for (int i = img2->height - 1; i < img1->height; i++) {
     for (int j = img2->width - 1; j < img1->width; j++) {
+      ITER++;
       // Obtém as somas locais das tabelas da img1
       int sum1 = sumtable1[G(img1, j, i)];
       int sumQ1 = sumtableQ1[G(img1, j, i)];
@@ -840,6 +852,7 @@ void ImageBlur2(Image img, int dx, int dy) { ///Esta função itera por todos os
 
       for (int i=x-dx; i<=x+dx; i++){ //fazer a caixa onde o nivel de cinzento do blur vai ser calculado
         for (int j=y-dy; j<=y+dy; j++){ //com as dimensões (2dx+1)x(2dy+1)
+        ITER++;
           if (ImageValidPos(img, i, j)){ //verifica se as coordenadas pertencem à imagem
             sum += ImageGetPixel(blured, i, j); //soma os pixeis
             counter++; //incrementa o contador
@@ -858,6 +871,7 @@ void ImageBlur(Image img, int dx, int dy){ //Versão otimizada da função Image
   sumtable = (int*) malloc(sizeof(uint8*)*img->width *img->height); //aloca memoria para a tabela de somas, que é igual ao numero de pixeis da imagem
   for (int x=0; x< img->width; x++){ //itera-se por todos os pixeis da imagem e calcula-se a tabela de somas,
     for (int y=0; y<img->height; y++){  //dependendo do valor de cinzento de cada pixel
+      ITER++;
       sumtable[G(img,x,y)]=ImageGetPixel(img, x, y); //o valor de cada elemento da tabela das somas é igual ao valor de cinzento do pixel (x,y) correspondente
       if (x>0 && y>0){                               //+ o valor do elemento (x-1,y) + o valor do elemento (x,y-1) - o valor do elemento (x-1,y-1).
         sumtable[G(img,x,y)]-=sumtable[G(img,x-1,y-1)]; 
@@ -872,6 +886,7 @@ void ImageBlur(Image img, int dx, int dy){ //Versão otimizada da função Image
   }//procede-se à aplicação do filtro de blur
   for (int x=0; x< img->width; x++){
     for (int y=0; y<img->height; y++){
+      ITER++;
       int initial_x=MAX(x-dx,0); //evitar que as coordenadas da caixa do blur ultrapassem os limites da imagem
       int initial_y=MAX(y-dy,0);
       int x_end=MIN(x+dx, img->width-1); //evitar que as coordenadas da caixa do blur ultrapassem os limites da imagem
@@ -905,6 +920,7 @@ int ImageMatchSubImage2(Image img1, int x, int y, Image img2) { ///
   for (int i = 0; i < img2->height; i++) {
     for (int j = 0; j < img2->width; j++) {
       COMPARACOES++;
+      ITER++;
       // Compara os píxeis correspondentes em ambas as imagens.
       if (ImageGetPixel(img1, x + j, y + i) != ImageGetPixel(img2, j, i)) {
         return 0; // Se a condição não for satisfeita, interrompe o loop e retorna 0.
@@ -923,6 +939,7 @@ int ImageLocateSubImage2(Image img1, int* px, int* py, Image img2) { ///
   // Iteração sobre as posições possíveis na imagem maior (img1).
   for (int i = 0; i < img1->height - img2->height + 1; i++) {
     for (int j = 0; j < img1->width - img2->width + 1; j++) {
+      ITER++;
       // Verifica se a subimagem coincide com a parte da imagem especificada.
       if (ImageMatchSubImage2(img1, j, i, img2) == 1) {
         *px = j;
@@ -933,3 +950,100 @@ int ImageLocateSubImage2(Image img1, int* px, int* py, Image img2) { ///
   }
   return 0; // Se não encontrar correspondência, retorna 0.
 }
+/*
+typedef struct {
+    char *resultString;
+} Result;
+
+
+void blahblah(Result *results, int n, int n2, Image img1, Image img2) {
+    assert(img1 != NULL);
+    assert(img2 != NULL);
+    for (int y = 0; y < img1->height - img2->height + 1; y++) {
+        for (int x = 0; x < img1->width - img2->width + 1; x++) {
+            // Allocate memory for the result string
+            int index = G(img1, x, y);
+            results[index].resultString = (char *)malloc(n2*3 + 1);  // Add 1 for null terminator
+            results[index].resultString[0] = '\0';
+
+            // Assuming img2 dimensions are less than or equal to img1 dimensions
+            for (int dy = 0; dy < img2->height; dy++) {
+                for (int dx = 0; dx < img2->width; dx++) {
+                    ITER++;
+                    char pixelValue[12];  // Assuming pixel values are integers
+                    sprintf(pixelValue, "%d", ImageGetPixel(img1, x + dx, y + dy));
+                    strcat(results[index].resultString, pixelValue);
+                }
+            }
+        }
+    }
+}
+
+
+char *string2;
+
+void createStringFromImg(Image img2) {
+    assert(img2 != NULL);
+    string2 = (char *)malloc((img2->width * img2->height * 3) + 1);  // Assuming pixel values are integers, add 1 for null terminator
+    string2[0] = '\0';  // Initialize the string
+
+    for (int y = 0; y < img2->height; y++) {
+        for (int x = 0; x < img2->width; x++) {
+          ITER++;
+            char pixelValue[12];  // Assuming pixel values are integers
+            sprintf(pixelValue, "%d", ImageGetPixel(img2, x, y));
+            strcat(string2, pixelValue);
+        }
+    }
+}
+
+
+int NewImageLocateSubImage(Image img1, int *px, int *py, Image img2) {
+    assert(img1 != NULL);
+    assert(img2 != NULL);
+
+    // Assuming you have the necessary information to determine n, n2, and G
+    int n = img1->height * img1->width;  // replace with the actual value
+    int n2 = img2->height * img2->width; // replace with the actual value
+    
+    // Create an array of Result to store the strings
+    Result *results = (Result *)malloc(n * sizeof(Result));
+
+
+    // Call blahblah to create the array of strings
+    blahblah(results, n, n2, img1, img2);
+    createStringFromImg(img2);
+    
+
+    for (int y = 0; y < img1->height - img2->height + 1; y++) {
+        for (int x = 0; x < img1->width - img2->width + 1; x++) {
+            int index = G(img1, x, y);
+            COMPARACOES++;
+
+            // Check if the current position matches the subimage
+            if (strcmp(string2, results[index].resultString) == 0) {
+                // Assign coordinates to px and py
+                *px = x;
+                *py = y;
+
+                // Free the memory allocated for resultString
+                free(results[index].resultString);
+
+                // Free the memory allocated for the results array
+                free(results);
+                free(string2);
+
+                // Return 1 for a match
+                return 1;
+            }
+        }
+    }
+
+    // Free the memory allocated for the results array
+    free(results);
+    free(string2);
+
+    // No match found, return 0
+    return 0;
+}
+*/
