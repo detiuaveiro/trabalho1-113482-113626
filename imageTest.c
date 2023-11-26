@@ -101,7 +101,7 @@ int main(int argc, char* argv[]) {
       res = ImageLocateSubImage2(nb1,&px,&py,crop);
       printf("\n# Best Case = encontra (Sucess = %d FOUND(%d,%d))\n",res,px,py);
       InstrPrint();
-      ImageSetPixel(crop,ImageWidth(nb1)/i-1,ImageHeight(nb1)/i-1,2);
+      ImageSetPixel(crop,ImageWidth(crop)-1,ImageHeight(crop)-1,2);
       InstrReset();
       res = ImageLocateSubImage2(nb1,&px,&py,crop);
       printf("\n# Worst Case = não encontra (Sucess = %d NOT FOUND)\n",res);
@@ -114,19 +114,30 @@ int main(int argc, char* argv[]) {
     MassSetting(nb1, 100);
 
     InstrReset();
-    for(int i = 5; i>=1; i--){
-      Image crop = ImageCrop(nb1,0,0,(int)ImageWidth(nb1)/i,(int)ImageHeight(nb1));
+    for (int i = 1; i <= 10; i++) {
+      double scaleFactor = i / 10.0;
+      Image crop = ImageCrop(nb1,0,0,(int)ImageWidth(nb1)*scaleFactor,(int)ImageHeight(nb1)*scaleFactor);
       int size = (int)ImageWidth(crop) * (int)ImageHeight(crop);
       InstrReset();
       printf("\n# Otimizado:\n # Locate image (size: %d - window %dx%d) in image (size: %d - window %dx%d)\n",size,(int)ImageWidth(crop),(int)ImageHeight(crop), n,ImageWidth(img1),ImageHeight(img1));
       res = ImageLocateSubImage(nb1,&px,&py,crop);
       printf("\n# Best Case ?=? encontra (Sucess = %d FOUND(%d,%d))\n",res,px,py);
       InstrPrint();
-      InstrReset();
       MassSetting(crop,101);
+      InstrReset();
       res = ImageLocateSubImage(nb1,&px,&py,crop);
       printf("\n# Best Case ?=? não encontra (Sucess = %d NOTFOUND)\n",res);
       InstrPrint();
+      /*MassSetting(crop,100);
+      ImageSetPixel(crop,ImageWidth(crop)-1,ImageHeight(crop)-1,101);
+      ImageSetPixel(crop,ImageWidth(crop)-2,ImageHeight(crop)-1,99);
+      ImageSetPixel(crop,ImageWidth(crop)-1,ImageHeight(crop)-2,101);
+      ImageSetPixel(crop,ImageWidth(crop)-2,ImageHeight(crop)-2,99);
+      InstrReset();
+      res = ImageLocateSubImage(nb1,&px,&py,crop);
+      printf("\n# Worst Case ?=? não encontra (Sucess = %d NOTFOUND)\n",res);
+      InstrPrint();
+      */
       InstrReset();
       ImageDestroy(&crop);
     }
