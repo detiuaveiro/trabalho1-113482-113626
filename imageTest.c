@@ -52,7 +52,7 @@ int main(int argc, char* argv[]) {
     fflush(stdout); // to print instrumentation
     Image cp1 = ImageCrop(img1, 0, 0, ImageWidth(img1), ImageHeight(img1));
 
-    printf("\n===========\n");
+    /*printf("\n===========\n");
     Image nb1 = ImageCrop(cp1, 0, 0, ImageWidth(img1), ImageHeight(img1));//aqui
     printf("\n# Não otimizado:\n # BLUR image (size: %d - window %dx%d) com dx = %d e dy = %d\n", n,ImageWidth(img1),ImageHeight(img1),10,10);
     InstrReset();
@@ -67,9 +67,9 @@ int main(int argc, char* argv[]) {
     ImageBlur2(nb1,20,20);
     InstrPrint();
 
-    ImageDestroy(&nb1);
+    ImageDestroy(&nb1);*/
 
-    nb1 = ImageCrop(cp1, 0, 0, ImageWidth(img1), ImageHeight(img1));//74
+    Image nb1 = ImageCrop(cp1, 0, 0, ImageWidth(img1), ImageHeight(img1));//74
     printf("\n# Otimizado:\n # BLUR image (size: %d - window %dx%d) com dx = %d e dy = %d\n", n,ImageWidth(img1),ImageHeight(img1),10,10);
     InstrReset();
     ImageBlur(nb1,10,10);
@@ -93,7 +93,7 @@ int main(int argc, char* argv[]) {
     MassSetting(nb1, 100);
 
     InstrReset();
-    for(int i = 5; i>=1; i--){
+    /*for(int i = 5; i>=1; i--){
       Image crop = ImageCrop(nb1,0,0,(int)ImageWidth(nb1)/i,(int)ImageHeight(nb1));
       int size = (int)ImageWidth(crop) * (int)ImageHeight(crop);
       InstrReset();
@@ -107,7 +107,7 @@ int main(int argc, char* argv[]) {
       printf("\n# Worst Case = não encontra (Sucess = %d NOT FOUND)\n",res);
       InstrPrint();
       ImageDestroy(&crop);
-    }
+    }*/
     ImageDestroy(&nb1);
 
     nb1 = ImageCrop(cp1, 0, 0, ImageWidth(img1), ImageHeight(img1));
