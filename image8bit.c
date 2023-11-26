@@ -28,7 +28,6 @@
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h> //alteração
 #include "instrumentation.h"
 
 // The data structure
@@ -950,100 +949,3 @@ int ImageLocateSubImage2(Image img1, int* px, int* py, Image img2) { ///
   }
   return 0; // Se não encontrar correspondência, retorna 0.
 }
-/*
-typedef struct {
-    char *resultString;
-} Result;
-
-
-void blahblah(Result *results, int n, int n2, Image img1, Image img2) {
-    assert(img1 != NULL);
-    assert(img2 != NULL);
-    for (int y = 0; y < img1->height - img2->height + 1; y++) {
-        for (int x = 0; x < img1->width - img2->width + 1; x++) {
-            // Allocate memory for the result string
-            int index = G(img1, x, y);
-            results[index].resultString = (char *)malloc(n2*3 + 1);  // Add 1 for null terminator
-            results[index].resultString[0] = '\0';
-
-            // Assuming img2 dimensions are less than or equal to img1 dimensions
-            for (int dy = 0; dy < img2->height; dy++) {
-                for (int dx = 0; dx < img2->width; dx++) {
-                    ITER++;
-                    char pixelValue[12];  // Assuming pixel values are integers
-                    sprintf(pixelValue, "%d", ImageGetPixel(img1, x + dx, y + dy));
-                    strcat(results[index].resultString, pixelValue);
-                }
-            }
-        }
-    }
-}
-
-
-char *string2;
-
-void createStringFromImg(Image img2) {
-    assert(img2 != NULL);
-    string2 = (char *)malloc((img2->width * img2->height * 3) + 1);  // Assuming pixel values are integers, add 1 for null terminator
-    string2[0] = '\0';  // Initialize the string
-
-    for (int y = 0; y < img2->height; y++) {
-        for (int x = 0; x < img2->width; x++) {
-          ITER++;
-            char pixelValue[12];  // Assuming pixel values are integers
-            sprintf(pixelValue, "%d", ImageGetPixel(img2, x, y));
-            strcat(string2, pixelValue);
-        }
-    }
-}
-
-
-int NewImageLocateSubImage(Image img1, int *px, int *py, Image img2) {
-    assert(img1 != NULL);
-    assert(img2 != NULL);
-
-    // Assuming you have the necessary information to determine n, n2, and G
-    int n = img1->height * img1->width;  // replace with the actual value
-    int n2 = img2->height * img2->width; // replace with the actual value
-    
-    // Create an array of Result to store the strings
-    Result *results = (Result *)malloc(n * sizeof(Result));
-
-
-    // Call blahblah to create the array of strings
-    blahblah(results, n, n2, img1, img2);
-    createStringFromImg(img2);
-    
-
-    for (int y = 0; y < img1->height - img2->height + 1; y++) {
-        for (int x = 0; x < img1->width - img2->width + 1; x++) {
-            int index = G(img1, x, y);
-            COMPARACOES++;
-
-            // Check if the current position matches the subimage
-            if (strcmp(string2, results[index].resultString) == 0) {
-                // Assign coordinates to px and py
-                *px = x;
-                *py = y;
-
-                // Free the memory allocated for resultString
-                free(results[index].resultString);
-
-                // Free the memory allocated for the results array
-                free(results);
-                free(string2);
-
-                // Return 1 for a match
-                return 1;
-            }
-        }
-    }
-
-    // Free the memory allocated for the results array
-    free(results);
-    free(string2);
-
-    // No match found, return 0
-    return 0;
-}
-*/
