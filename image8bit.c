@@ -835,34 +835,6 @@ int ImageLocateSubImage(Image img1, int* px, int* py, Image img2) {
 /// Each pixel is substituted by the mean of the pixels in the rectangle
 /// [x-dx, x+dx]x[y-dy, y+dy].
 /// The image is changed in-place.
-void ImageBlur2(Image img, int dx, int dy) { ///Esta função itera por todos os pixeis da imagem e aplica o filtro de blur
-  assert(img!=NULL);
-  int sum = 0; //variavel para guardar a soma dos pixeis
-  int counter = 0; //variavel para guardar o numero de pixeis
-  Image blured = ImageCreate(img->width,img->height,img->maxval); //cria uma nova imagem com as dimensões da imagem original
-  ImagePaste(blured,0,0,img); //copia a imagem original para a nova imagem
-
-  int w = img->width; //variavel para guardar a largura da imagem
-  int h = img->height; //variavel para guardar a altura da imagem
-  for (int x=0; x<w; x++){
-    for (int y=0; y<h; y++){ //itera por todos os pixeis da imagem
-      sum=0; //reinicia a soma e o contador
-      counter=0; 
-
-      for (int i=x-dx; i<=x+dx; i++){ //fazer a caixa onde o nivel de cinzento do blur vai ser calculado
-        for (int j=y-dy; j<=y+dy; j++){ //com as dimensões (2dx+1)x(2dy+1)
-        ITER++;
-          if (ImageValidPos(img, i, j)){ //verifica se as coordenadas pertencem à imagem
-            sum += ImageGetPixel(blured, i, j); //soma os pixeis
-            counter++; //incrementa o contador
-          }
-        }
-      }
-      ImageSetPixel(img, x, y, (uint8)((sum+counter/2)/counter)); //atribui o valor de cinzento ao pixel, calculado através da expressão do blur
-    }
-  }
-  ImageDestroy(&blured);
-}
 
 void ImageBlur(Image img, int dx, int dy){ //Versão otimizada da função ImageBlur, através da tabela das somas
   assert(img!=NULL);
@@ -911,41 +883,3 @@ void ImageBlur(Image img, int dx, int dy){ //Versão otimizada da função Image
   sumtable=NULL;
 }
 
-int ImageMatchSubImage2(Image img1, int x, int y, Image img2) { ///
-  assert(img1 != NULL);
-  assert(img2 != NULL);
-  assert(ImageValidPos(img1, x, y));
-  // Iteração sobre os píxeis da subimagem (img2).
-  for (int i = 0; i < img2->height; i++) {
-    for (int j = 0; j < img2->width; j++) {
-      COMPARACOES++;
-      ITER++;
-      // Compara os píxeis correspondentes em ambas as imagens.
-      if (ImageGetPixel(img1, x + j, y + i) != ImageGetPixel(img2, j, i)) {
-        return 0; // Se a condição não for satisfeita, interrompe o loop e retorna 0.
-      }
-    }
-  }
-  return 1; // Se todos os píxeis coincidirem, retorna 1.
-}
-/// Locate a subimage inside another image.
-/// Searches for img2 inside img1.
-/// If a match is found, returns 1 and matching position is set in vars (*px, *py).
-/// If no match is found, returns 0 and (*px, *py) are left untouched.
-int ImageLocateSubImage2(Image img1, int* px, int* py, Image img2) { ///
-  assert(img1 != NULL);
-  assert(img2 != NULL);
-  // Iteração sobre as posições possíveis na imagem maior (img1).
-  for (int i = 0; i < img1->height - img2->height + 1; i++) {
-    for (int j = 0; j < img1->width - img2->width + 1; j++) {
-      ITER++;
-      // Verifica se a subimagem coincide com a parte da imagem especificada.
-      if (ImageMatchSubImage2(img1, j, i, img2) == 1) {
-        *px = j;
-        *py = i;
-        return 1; // Se houver uma correspondência, atribui as coordenadas e retorna 1.
-      }
-    }
-  }
-  return 0; // Se não encontrar correspondência, retorna 0.
-}
